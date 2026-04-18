@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { Client } from '@stomp/stompjs'
 import SockJS from 'sockjs-client'
 import { useDmStore } from '../store/dmStore'
@@ -16,6 +16,7 @@ interface DmEvent {
 export function useDmSocket(threadId: string | null) {
   const { appendMessage, updateMessage, markDeleted } = useDmStore()
   const { user } = useAuthStore()
+  const clientRef = useRef<Client | null>(null)
 
   useEffect(() => {
     if (!threadId || !user) return
@@ -48,7 +49,8 @@ export function useDmSocket(threadId: string | null) {
       },
     })
 
+    clientRef.current = client
     client.activate()
-    return () => { client.deactivate() }
+    return () => { client.deactivate(); clientRef.current = null }
   }, [threadId, user])
 }
