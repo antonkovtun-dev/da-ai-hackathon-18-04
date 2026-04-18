@@ -1,12 +1,15 @@
 package com.example.chat.friendships;
 
 import jakarta.persistence.*;
+import java.io.Serializable;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Entity
 @Table(name = "friendships")
-public class Friendship {
+public class Friendship implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
