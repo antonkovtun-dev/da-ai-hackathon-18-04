@@ -15,7 +15,7 @@ Classic web-based real-time chat application, built under hackathon time pressur
 | Layer | Choice |
 |---|---|
 | Backend | Java 21 + Spring Boot 3 |
-| Frontend | React + TypeScript (Vite) |
+| Frontend | React 19 + TypeScript 6 + Vite 8 |
 | Real-time | WebSocket (Spring WebSocket / STOMP) |
 | Database | PostgreSQL |
 | ORM | Spring Data JPA (Hibernate) |
@@ -23,7 +23,7 @@ Classic web-based real-time chat application, built under hackathon time pressur
 | Auth | Database-backed sessions (Spring Session + PostgreSQL) |
 | Build | Maven (backend), npm/Vite (frontend) |
 | File storage | Local filesystem (Docker volume mount) |
-| Styling | Minimal component library or plain CSS |
+| Styling | Tailwind CSS 3 |
 
 Deviate from this stack only with a clear rationale that keeps Docker Compose startup intact.
 
@@ -52,16 +52,25 @@ Ports: backend `:8080`, frontend dev server `:5173` (proxies `/api` and `/ws` to
 
 ## Commands
 
-> Scaffolding not yet generated. Once `backend/pom.xml` and `frontend/package.json` exist, this section must list:
-> - how to start the full stack (`docker compose up`, `docker compose up --build`)
-> - how to run backend only in dev (`./mvnw spring-boot:run` inside `backend/`)
-> - how to run frontend only in dev (`npm run dev` inside `frontend/`)
-> - how to run tests: all (`./mvnw test`) and single class (`./mvnw test -Dtest=SomeServiceTest`)
-> - how to apply migrations manually (`./mvnw flyway:migrate`)
->
-> Update this section as part of the scaffolding PR.
+```bash
+# Full stack (Docker)
+docker compose up                          # start everything (postgres + backend)
+docker compose up --build                  # rebuild images before starting
+docker compose down                        # stop and remove containers
 
-Migrations run automatically on application startup via Flyway. Seed data via `data.sql` or a Spring Boot `ApplicationRunner` bean.
+# Backend (from backend/ directory)
+./mvnw spring-boot:run                     # run backend in dev mode (hot-reload)
+./mvnw test                                # run all tests (requires Docker for Testcontainers)
+./mvnw test -Dtest=SomeServiceTest         # run a single test class
+./mvnw package -DskipTests                 # build JAR without tests
+
+# Frontend (from frontend/ directory)
+npm run dev                                # start Vite dev server at :5173
+npm run build                              # build production bundle
+npm run preview                            # preview production build
+```
+
+Migrations run automatically on application startup via Flyway. The dev server at `:5173` proxies `/api` and `/ws` to the backend at `:8080`. Tests require Docker (Testcontainers starts a temporary Postgres container).
 
 ---
 
