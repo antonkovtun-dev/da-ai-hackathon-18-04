@@ -20,12 +20,11 @@ export function usePresenceHeartbeat() {
 
     const interval = setInterval(beat, 30_000)
 
-    const onVisibility = () => beat()
-    document.addEventListener('visibilitychange', onVisibility)
+    document.addEventListener('visibilitychange', beat)
 
     return () => {
       clearInterval(interval)
-      document.removeEventListener('visibilitychange', onVisibility)
+      document.removeEventListener('visibilitychange', beat)
     }
   }, [])
 }
