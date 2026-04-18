@@ -7,6 +7,8 @@ import RegisterPage from './pages/RegisterPage'
 import RoomCatalogPage from './pages/RoomCatalogPage'
 import CreateRoomPage from './pages/CreateRoomPage'
 import ChatPage from './pages/ChatPage'
+import FriendsPage from './pages/FriendsPage'
+import DmChatPage from './pages/DmChatPage'
 
 export default function App() {
   const init = useAuthStore(s => s.init)
@@ -26,6 +28,12 @@ export default function App() {
         } />
         <Route path="/rooms/:id" element={
           <ProtectedRoute><ChatPage /></ProtectedRoute>
+        } />
+        <Route path="/friends" element={
+          <ProtectedRoute><FriendsPage /></ProtectedRoute>
+        } />
+        <Route path="/dm/:id" element={
+          <ProtectedRoute><DmChatPage /></ProtectedRoute>
         } />
         <Route path="/" element={<Navigate to="/rooms" replace />} />
         <Route path="*" element={<Navigate to="/rooms" replace />} />
