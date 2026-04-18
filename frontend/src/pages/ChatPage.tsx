@@ -7,6 +7,7 @@ import { getMessages } from '../api/messages'
 import { getRoom, markRoomRead } from '../api/rooms'
 import { logout } from '../api/auth'
 import { useRoomSocket } from '../hooks/useRoomSocket'
+import { usePresenceHeartbeat } from '../hooks/usePresenceHeartbeat'
 import Sidebar from '../components/Sidebar'
 import MessageList from '../components/MessageList'
 import MessageComposer from '../components/MessageComposer'
@@ -21,6 +22,7 @@ export default function ChatPage() {
   const room = myRooms.find((r) => r.id === roomId)
 
   useRoomSocket(roomId ?? null)
+  usePresenceHeartbeat()
 
   useEffect(() => {
     if (!roomId) return
