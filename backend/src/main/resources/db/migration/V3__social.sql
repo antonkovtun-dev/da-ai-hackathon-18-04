@@ -32,8 +32,8 @@ CREATE TABLE user_blocks (
 -- dm_threads — canonical: user1_id < user2_id (enforced in service layer)
 CREATE TABLE dm_threads (
     id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user1_id    UUID NOT NULL REFERENCES users(id),
-    user2_id    UUID NOT NULL REFERENCES users(id),
+    user1_id    UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    user2_id    UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
     UNIQUE (user1_id, user2_id)
 );
