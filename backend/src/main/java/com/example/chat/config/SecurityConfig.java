@@ -25,6 +25,7 @@ public class SecurityConfig {
                 .requestMatchers(
                     "/api/health",
                     "/api/auth/**",
+                    "/ws/**",
                     "/",
                     "/index.html",
                     "/favicon.svg",
