@@ -18,6 +18,7 @@ public class AuthUserDetailsService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         return userRepository.findByEmail(email)
+                .filter(u -> u.getDeletedAt() == null)
                 .map(u -> new AuthUserDetails(u.getId(), u.getEmail(), u.getPasswordHash()))
                 .orElseThrow(() -> new UsernameNotFoundException("No user with email: " + email));
     }
