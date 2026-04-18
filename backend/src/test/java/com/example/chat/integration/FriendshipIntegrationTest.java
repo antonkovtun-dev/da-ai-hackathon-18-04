@@ -5,6 +5,7 @@ import com.example.chat.auth.dto.RegisterRequest;
 import com.example.chat.bans.UserBlockRepository;
 import com.example.chat.bans.dto.BlockRequest;
 import com.example.chat.friendships.FriendRequestRepository;
+import com.example.chat.friendships.FriendRequestStatus;
 import com.example.chat.friendships.FriendshipRepository;
 import com.example.chat.friendships.dto.FriendRequestResponse;
 import com.example.chat.friendships.dto.FriendResponse;
@@ -77,6 +78,8 @@ class FriendshipIntegrationTest extends IntegrationTestBase {
             HttpMethod.POST, auth(bob), Void.class);
 
         assertThat(friendshipRepository.count()).isZero();
+        assertThat(friendRequestRepository.findById(req.id()).get().getStatus())
+            .isEqualTo(FriendRequestStatus.DECLINED);
     }
 
     @Test
@@ -91,6 +94,8 @@ class FriendshipIntegrationTest extends IntegrationTestBase {
         var cancel = restTemplate.exchange("/api/friends/requests/" + req.id(),
             HttpMethod.DELETE, auth(alice), Void.class);
         assertThat(cancel.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+        assertThat(friendRequestRepository.findById(req.id()).get().getStatus())
+            .isEqualTo(FriendRequestStatus.CANCELED);
     }
 
     @Test
