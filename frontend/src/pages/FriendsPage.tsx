@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useFriendStore } from '../store/friendStore'
-import { useAuthStore } from '../store/authStore'
 import {
   sendFriendRequest, acceptRequest, declineRequest,
   cancelRequest, removeFriend, blockUser
@@ -10,7 +9,6 @@ import { getOrCreateThread } from '../api/dm'
 import { useDmStore } from '../store/dmStore'
 
 export default function FriendsPage() {
-  const { user } = useAuthStore()
   const { friends, incoming, outgoing, fetchAll, removeIncoming, removeOutgoing, setFriends } = useFriendStore()
   const { addThread } = useDmStore()
   const navigate = useNavigate()
@@ -37,31 +35,56 @@ export default function FriendsPage() {
   }
 
   async function handleAccept(id: string) {
-    await acceptRequest(id)
-    removeIncoming(id)
-    fetchAll()
+    try {
+      await acceptRequest(id)
+      removeIncoming(id)
+      fetchAll()
+    } catch (e: unknown) {
+      const err = e as Error
+      alert(err.message || 'Failed to accept request')
+    }
   }
 
   async function handleDecline(id: string) {
-    await declineRequest(id)
-    removeIncoming(id)
+    try {
+      await declineRequest(id)
+      removeIncoming(id)
+    } catch (e: unknown) {
+      const err = e as Error
+      alert(err.message || 'Failed to decline request')
+    }
   }
 
   async function handleCancel(id: string) {
-    await cancelRequest(id)
-    removeOutgoing(id)
+    try {
+      await cancelRequest(id)
+      removeOutgoing(id)
+    } catch (e: unknown) {
+      const err = e as Error
+      alert(err.message || 'Failed to cancel request')
+    }
   }
 
   async function handleRemoveFriend(userId: string) {
     if (!confirm('Remove this friend?')) return
-    await removeFriend(userId)
-    setFriends(friends.filter((f) => f.userId !== userId))
+    try {
+      await removeFriend(userId)
+      setFriends(friends.filter((f) => f.userId !== userId))
+    } catch (e: unknown) {
+      const err = e as Error
+      alert(err.message || 'Failed to remove friend')
+    }
   }
 
   async function handleBlock(userId: string) {
     if (!confirm('Block this user? This will also remove the friendship.')) return
-    await blockUser(userId)
-    setFriends(friends.filter((f) => f.userId !== userId))
+    try {
+      await blockUser(userId)
+      setFriends(friends.filter((f) => f.userId !== userId))
+    } catch (e: unknown) {
+      const err = e as Error
+      alert(err.message || 'Failed to block user')
+    }
   }
 
   async function handleOpenDm(userId: string) {
@@ -74,9 +97,6 @@ export default function FriendsPage() {
       alert(err.message || 'Cannot open DM')
     }
   }
-
-  // Suppress unused variable warning — user may be used for future per-user logic
-  void user
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">

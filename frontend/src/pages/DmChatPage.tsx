@@ -25,6 +25,7 @@ export default function DmChatPage() {
 
   useEffect(() => {
     if (!threadId) return
+    setHasMore(true)
     getDmMessages(threadId).then((msgs) => setMessages(threadId, msgs))
   }, [threadId])
 
