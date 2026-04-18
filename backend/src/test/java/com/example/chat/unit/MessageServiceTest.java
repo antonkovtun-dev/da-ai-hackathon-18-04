@@ -9,6 +9,7 @@ import com.example.chat.messages.MessageService;
 import com.example.chat.messages.dto.MessageResponse;
 import com.example.chat.users.User;
 import com.example.chat.users.UserRepository;
+import com.example.chat.readstate.ReadStateService;
 import com.example.chat.websocket.RoomEventPublisher;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -33,6 +34,7 @@ class MessageServiceTest {
     @Mock RoomMembershipRepository membershipRepository;
     @Mock UserRepository userRepository;
     @Mock RoomEventPublisher eventPublisher;
+    @Mock ReadStateService readStateService;
     @InjectMocks MessageService messageService;
 
     @Test

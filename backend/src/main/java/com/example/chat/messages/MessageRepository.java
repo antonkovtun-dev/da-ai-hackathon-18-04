@@ -13,4 +13,8 @@ public interface MessageRepository extends JpaRepository<Message, UUID> {
 
     @Query("SELECT m FROM Message m WHERE m.roomId = :roomId AND m.createdAt < :before ORDER BY m.createdAt DESC")
     List<Message> findByRoomIdBefore(@Param("roomId") UUID roomId, @Param("before") OffsetDateTime before, Pageable pageable);
+
+    long countByRoomIdAndDeletedAtIsNull(UUID roomId);
+
+    long countByRoomIdAndCreatedAtAfterAndDeletedAtIsNull(UUID roomId, OffsetDateTime since);
 }

@@ -4,6 +4,7 @@ import com.example.chat.memberships.RoomMembership;
 import com.example.chat.memberships.RoomMembershipRepository;
 import com.example.chat.memberships.RoomRole;
 import com.example.chat.messages.dto.MessageResponse;
+import com.example.chat.readstate.ReadStateService;
 import com.example.chat.users.User;
 import com.example.chat.users.UserRepository;
 import com.example.chat.websocket.RoomEventPublisher;
@@ -27,13 +28,18 @@ public class MessageService {
     private final RoomMembershipRepository membershipRepository;
     private final UserRepository userRepository;
     private final RoomEventPublisher eventPublisher;
+    private final ReadStateService readStateService;
 
-    public MessageService(MessageRepository messageRepository, RoomMembershipRepository membershipRepository,
-                          UserRepository userRepository, RoomEventPublisher eventPublisher) {
+    public MessageService(MessageRepository messageRepository,
+                          RoomMembershipRepository membershipRepository,
+                          UserRepository userRepository,
+                          RoomEventPublisher eventPublisher,
+                          ReadStateService readStateService) {
         this.messageRepository = messageRepository;
         this.membershipRepository = membershipRepository;
         this.userRepository = userRepository;
         this.eventPublisher = eventPublisher;
+        this.readStateService = readStateService;
     }
 
     @Transactional
@@ -46,6 +52,8 @@ public class MessageService {
         msg.setAuthorId(authorId);
         msg.setContent(content);
         msg = messageRepository.save(msg);
+
+        readStateService.markRead(roomId, authorId);
 
         User author = userRepository.findById(authorId).orElseThrow();
         MessageResponse resp = toResponse(msg, author.getUsername());
