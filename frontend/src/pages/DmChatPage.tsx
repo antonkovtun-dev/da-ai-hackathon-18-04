@@ -32,7 +32,7 @@ export default function DmChatPage() {
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [roomMessages.length === 0])
+  }, [roomMessages.length])
 
   async function handleSend() {
     const text = content.trim()
