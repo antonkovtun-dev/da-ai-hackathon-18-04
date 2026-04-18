@@ -7,20 +7,22 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@Testcontainers
 @ActiveProfiles("test")
 public abstract class IntegrationTestBase {
 
-    @Container
-    static final PostgreSQLContainer<?> POSTGRES =
-            new PostgreSQLContainer<>("postgres:16-alpine")
-                    .withDatabaseName("chat_test")
-                    .withUsername("chat")
-                    .withPassword("chat");
+    // Singleton container — started once per JVM, shared across all test classes so that
+    // the Spring context is never bound to a stopped container across test class boundaries.
+    static final PostgreSQLContainer<?> POSTGRES;
+
+    static {
+        POSTGRES = new PostgreSQLContainer<>("postgres:16-alpine")
+                .withDatabaseName("chat_test")
+                .withUsername("chat")
+                .withPassword("chat");
+        POSTGRES.start();
+    }
 
     @DynamicPropertySource
     static void overrideDataSource(DynamicPropertyRegistry registry) {
