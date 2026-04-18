@@ -1,6 +1,6 @@
 package com.example.chat.config;
 
-import com.example.chat.auth.FieldException;
+import com.example.chat.common.FieldException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
