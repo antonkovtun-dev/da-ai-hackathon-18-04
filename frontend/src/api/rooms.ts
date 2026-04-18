@@ -68,3 +68,9 @@ export const banUser = (roomId: string, userId: string, reason?: string) =>
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ userId, reason }),
   })
+
+export const markRoomRead = (id: string) =>
+  request<void>(`/api/rooms/${id}/read`, { method: 'POST' })
+
+export const getUnreadCounts = () =>
+  request<Record<string, number>>('/api/rooms/unread')

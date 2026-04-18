@@ -6,12 +6,15 @@ interface RoomStore {
   myRooms: Room[]
   activeRoomId: string | null
   unread: Record<string, number>
+  presence: Record<string, string>
   setMyRooms: (rooms: Room[]) => void
   addRoom: (room: Room) => void
   removeRoom: (roomId: string) => void
   setActiveRoom: (roomId: string | null) => void
   incrementUnread: (roomId: string) => void
   clearUnread: (roomId: string) => void
+  setUnread: (counts: Record<string, number>) => void
+  setPresence: (userId: string, status: string) => void
   fetchMyRooms: () => Promise<void>
   join: (roomId: string) => Promise<void>
   leave: (roomId: string) => Promise<void>
@@ -21,6 +24,7 @@ export const useRoomStore = create<RoomStore>((set, get) => ({
   myRooms: [],
   activeRoomId: null,
   unread: {},
+  presence: {},
 
   setMyRooms: (rooms) => set({ myRooms: rooms }),
   addRoom: (room) => set((s) => ({ myRooms: [...s.myRooms, room] })),
@@ -30,6 +34,9 @@ export const useRoomStore = create<RoomStore>((set, get) => ({
     set((s) => ({ unread: { ...s.unread, [roomId]: (s.unread[roomId] ?? 0) + 1 } })),
   clearUnread: (roomId) =>
     set((s) => ({ unread: { ...s.unread, [roomId]: 0 } })),
+  setUnread: (counts) => set({ unread: counts }),
+  setPresence: (userId, status) =>
+    set((s) => ({ presence: { ...s.presence, [userId]: status } })),
 
   fetchMyRooms: async () => {
     const page = await getRooms('', 0)

@@ -4,7 +4,7 @@ import { useAuthStore } from '../store/authStore'
 import { useRoomStore } from '../store/roomStore'
 import { useMessageStore } from '../store/messageStore'
 import { getMessages } from '../api/messages'
-import { getRoom } from '../api/rooms'
+import { getRoom, markRoomRead } from '../api/rooms'
 import { logout } from '../api/auth'
 import { useRoomSocket } from '../hooks/useRoomSocket'
 import Sidebar from '../components/Sidebar'
@@ -26,6 +26,7 @@ export default function ChatPage() {
     if (!roomId) return
     setActiveRoom(roomId)
     clearUnread(roomId)
+    markRoomRead(roomId).catch(() => {})
 
     getRoom(roomId).catch(() => navigate('/rooms'))
     getMessages(roomId).then((msgs) => setMessages(roomId, msgs))

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useRoomStore } from '../store/roomStore'
 import { useDmStore } from '../store/dmStore'
 import { listThreads } from '../api/dm'
+import { getUnreadCounts } from '../api/rooms'
 
 interface Props {
   activeRoomId?: string
@@ -10,12 +11,13 @@ interface Props {
 }
 
 export default function Sidebar({ activeRoomId, activeDmId }: Props) {
-  const { myRooms, unread } = useRoomStore()
+  const { myRooms, unread, setUnread } = useRoomStore()
   const { threads, setThreads } = useDmStore()
   const navigate = useNavigate()
 
   useEffect(() => {
     listThreads().then(setThreads).catch(() => {})
+    getUnreadCounts().then(setUnread).catch(() => {})
   }, [])
 
   return (
