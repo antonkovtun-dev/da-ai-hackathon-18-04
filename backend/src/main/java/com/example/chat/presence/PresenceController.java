@@ -21,7 +21,7 @@ public class PresenceController {
 
     @PostMapping("/heartbeat")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void heartbeat(@RequestBody HeartbeatRequest req) {
+    public void heartbeat(@RequestBody @jakarta.validation.Valid HeartbeatRequest req) {
         presenceService.heartbeat(currentUserId(), req.tabId(), req.active());
     }
 

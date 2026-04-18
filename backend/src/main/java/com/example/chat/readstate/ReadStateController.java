@@ -1,9 +1,11 @@
 package com.example.chat.readstate;
 
 import com.example.chat.auth.AuthUserDetails;
+import com.example.chat.memberships.RoomMembershipRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Map;
 import java.util.UUID;
@@ -13,9 +15,12 @@ import java.util.UUID;
 public class ReadStateController {
 
     private final ReadStateService readStateService;
+    private final RoomMembershipRepository membershipRepository;
 
-    public ReadStateController(ReadStateService readStateService) {
+    public ReadStateController(ReadStateService readStateService,
+                               RoomMembershipRepository membershipRepository) {
         this.readStateService = readStateService;
+        this.membershipRepository = membershipRepository;
     }
 
     @GetMapping("/unread")
@@ -26,7 +31,11 @@ public class ReadStateController {
     @PostMapping("/{roomId}/read")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void markRead(@PathVariable UUID roomId) {
-        readStateService.markRead(roomId, currentUserId());
+        UUID userId = currentUserId();
+        if (!membershipRepository.existsByRoomIdAndUserId(roomId, userId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
+        readStateService.markRead(roomId, userId);
     }
 
     private UUID currentUserId() {
