@@ -62,6 +62,7 @@ public class UserBlockService {
         userBlockRepository.deleteByBlockerIdAndBlockedId(blockerId, blockedId);
     }
 
+    @Transactional(readOnly = true)
     public List<BlockedUserResponse> listBlocked(UUID blockerId) {
         List<UserBlock> blocks = userBlockRepository.findByBlockerId(blockerId);
         Map<UUID, User> users = userRepository.findAllById(
@@ -75,6 +76,7 @@ public class UserBlockService {
             }).toList();
     }
 
+    @Transactional(readOnly = true)
     public boolean isBlocked(UUID a, UUID b) {
         return userBlockRepository.existsByBlockerIdAndBlockedId(a, b) ||
                userBlockRepository.existsByBlockerIdAndBlockedId(b, a);
