@@ -1,21 +1,10 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useEffect } from 'react'
 import { useAuthStore } from './store/authStore'
-
-function PlaceholderPage({ name }: { name: string }) {
-  return (
-    <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
-      <p className="text-gray-400">{name} — coming soon</p>
-    </div>
-  )
-}
-
-function ProtectedPlaceholder() {
-  const { user, loading } = useAuthStore()
-  if (loading) return null
-  if (!user) return <Navigate to="/login" replace />
-  return <PlaceholderPage name="Home" />
-}
+import ProtectedRoute from './components/ProtectedRoute'
+import LoginPage from './pages/LoginPage'
+import RegisterPage from './pages/RegisterPage'
+import HomePage from './pages/HomePage'
 
 export default function App() {
   const init = useAuthStore(s => s.init)
@@ -25,9 +14,16 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/login" element={<PlaceholderPage name="Login" />} />
-        <Route path="/register" element={<PlaceholderPage name="Register" />} />
-        <Route path="/" element={<ProtectedPlaceholder />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <HomePage />
+            </ProtectedRoute>
+          }
+        />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
