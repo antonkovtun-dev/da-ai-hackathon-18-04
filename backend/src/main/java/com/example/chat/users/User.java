@@ -9,17 +9,21 @@ import java.util.UUID;
 @Table(name = "users")
 public class User implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
+    protected User() {}
+
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false, unique = true, length = 255)
     private String email;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false, unique = true, length = 30)
     private String username;
 
-    @Column(name = "password_hash", nullable = false)
+    @Column(name = "password_hash", nullable = false, length = 255)
     private String passwordHash;
 
     @Column(name = "created_at", nullable = false, updatable = false)
