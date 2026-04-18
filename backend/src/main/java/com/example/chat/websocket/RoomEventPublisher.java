@@ -43,4 +43,9 @@ public class RoomEventPublisher {
     public void publishMemberKicked(UUID roomId, UUID userId, String username) {
         publish(roomId, Map.of("type", "MEMBER_KICKED", "userId", userId, "username", username));
     }
+
+    public void publishPresenceUpdate(UUID roomId, UUID userId, String username, String status) {
+        publish(roomId, Map.of("type", "PRESENCE_UPDATE", "userId", userId.toString(),
+            "username", username, "status", status));
+    }
 }
