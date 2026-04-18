@@ -2,11 +2,13 @@ import { create } from 'zustand'
 import type { Room } from '../api/rooms'
 import { getRooms, joinRoom, leaveRoom } from '../api/rooms'
 
+export type PresenceStatus = 'ONLINE' | 'AFK' | 'OFFLINE'
+
 interface RoomStore {
   myRooms: Room[]
   activeRoomId: string | null
   unread: Record<string, number>
-  presence: Record<string, string>
+  presence: Record<string, PresenceStatus>
   setMyRooms: (rooms: Room[]) => void
   addRoom: (room: Room) => void
   removeRoom: (roomId: string) => void
@@ -14,7 +16,7 @@ interface RoomStore {
   incrementUnread: (roomId: string) => void
   clearUnread: (roomId: string) => void
   setUnread: (counts: Record<string, number>) => void
-  setPresence: (userId: string, status: string) => void
+  setPresence: (userId: string, status: PresenceStatus) => void
   fetchMyRooms: () => Promise<void>
   join: (roomId: string) => Promise<void>
   leave: (roomId: string) => Promise<void>

@@ -3,6 +3,7 @@ import { Client } from '@stomp/stompjs'
 import SockJS from 'sockjs-client'
 import { useMessageStore } from '../store/messageStore'
 import { useRoomStore } from '../store/roomStore'
+import type { PresenceStatus } from '../store/roomStore'
 import { useAuthStore } from '../store/authStore'
 import type { Message } from '../api/messages'
 
@@ -14,7 +15,7 @@ interface RoomEvent {
   editedAt?: string
   userId?: string
   username?: string
-  status?: string
+  status?: PresenceStatus
 }
 
 export function useRoomSocket(roomId: string | null) {
