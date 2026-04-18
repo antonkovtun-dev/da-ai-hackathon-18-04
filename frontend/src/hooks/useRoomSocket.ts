@@ -7,19 +7,20 @@ import { useAuthStore } from '../store/authStore'
 import type { Message } from '../api/messages'
 
 interface RoomEvent {
-  type: 'MESSAGE_NEW' | 'MESSAGE_EDITED' | 'MESSAGE_DELETED' | 'MEMBER_JOINED' | 'MEMBER_LEFT' | 'MEMBER_KICKED'
+  type: 'MESSAGE_NEW' | 'MESSAGE_EDITED' | 'MESSAGE_DELETED' | 'MEMBER_JOINED' | 'MEMBER_LEFT' | 'MEMBER_KICKED' | 'PRESENCE_UPDATE'
   message?: Message
   messageId?: string
   content?: string
   editedAt?: string
   userId?: string
   username?: string
+  status?: string
 }
 
 export function useRoomSocket(roomId: string | null) {
   const clientRef = useRef<Client | null>(null)
   const { appendMessage, updateMessage, markDeleted } = useMessageStore()
-  const { incrementUnread, removeRoom } = useRoomStore()
+  const { incrementUnread, removeRoom, setPresence } = useRoomStore()
   const { user } = useAuthStore()
 
   // Keep activeRoomId current inside the closure without re-triggering the effect
@@ -72,6 +73,11 @@ export function useRoomSocket(roomId: string | null) {
           if (event.userId === uid) {
             removeRoom(rid)
             window.location.href = '/rooms'
+          }
+          break
+        case 'PRESENCE_UPDATE':
+          if (event.userId && event.status) {
+            setPresence(event.userId, event.status)
           }
           break
       }
