@@ -85,7 +85,7 @@ public class DmService {
         verifyParticipant(thread, requesterId);
 
         List<DmMessage> messages;
-        PageRequest page = PageRequest.of(0, limit);
+        PageRequest page = PageRequest.of(0, Math.min(Math.max(1, limit), 100));
         if (beforeId != null) {
             DmMessage cursor = dmMessageRepository.findById(beforeId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
@@ -131,9 +131,9 @@ public class DmService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot edit deleted message");
         msg.setContent(content);
         msg.setEditedAt(OffsetDateTime.now());
+        User author = userRepository.findById(requesterId).orElseThrow();
         msg = dmMessageRepository.save(msg);
         dmEventPublisher.publishMessageEdited(msg.getThreadId(), messageId, content, msg.getEditedAt());
-        User author = userRepository.findById(requesterId).orElseThrow();
         return toResponse(msg, Map.of(requesterId, author));
     }
 
