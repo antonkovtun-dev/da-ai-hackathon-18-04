@@ -61,7 +61,6 @@ public class AuthController {
     public void logout(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
         if (session != null) session.invalidate();
-        SecurityContextHolder.clearContext();
     }
 
     @GetMapping("/me")

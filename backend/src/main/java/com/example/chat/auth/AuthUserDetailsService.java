@@ -19,7 +19,7 @@ public class AuthUserDetailsService implements UserDetailsService {
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         return userRepository.findByEmail(email)
                 .filter(u -> u.getDeletedAt() == null)
-                .map(u -> new AuthUserDetails(u.getId(), u.getEmail(), u.getPasswordHash()))
+                .map(u -> new AuthUserDetails(u.getId(), u.getEmail(), u.getUsername(), u.getPasswordHash()))
                 .orElseThrow(() -> new UsernameNotFoundException("No user with email: " + email));
     }
 }

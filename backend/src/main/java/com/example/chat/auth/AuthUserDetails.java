@@ -14,15 +14,18 @@ public class AuthUserDetails implements UserDetails, Serializable {
 
     private final UUID userId;
     private final String email;
+    private final String username;
     private final String passwordHash;
 
-    public AuthUserDetails(UUID userId, String email, String passwordHash) {
+    public AuthUserDetails(UUID userId, String email, String username, String passwordHash) {
         this.userId = userId;
         this.email = email;
+        this.username = username;
         this.passwordHash = passwordHash;
     }
 
     public UUID getUserId() { return userId; }
+    public String getUserUsername() { return username; }
 
     @Override public String getUsername() { return email; }
     @Override public String getPassword() { return passwordHash; }
