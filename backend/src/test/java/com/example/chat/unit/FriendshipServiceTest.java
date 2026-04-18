@@ -96,6 +96,7 @@ class FriendshipServiceTest {
 
         assertThat(req.getStatus()).isEqualTo(FriendRequestStatus.ACCEPTED);
         verify(friendshipRepository).save(argThat(f ->
+            f.getUser1Id().compareTo(f.getUser2Id()) < 0 &&
             (f.getUser1Id().equals(senderId) || f.getUser1Id().equals(accepterId)) &&
             (f.getUser2Id().equals(senderId) || f.getUser2Id().equals(accepterId))));
     }
@@ -126,6 +127,21 @@ class FriendshipServiceTest {
         friendshipService.removeFriend(userId, friendId);
 
         verify(friendshipRepository).deleteBetween(userId, friendId);
+    }
+
+    @Test
+    void sendRequest_fails_when_receiver_has_blocked_sender() {
+        UUID senderId = UUID.randomUUID();
+        UUID receiverId = UUID.randomUUID();
+        User target = makeUser(receiverId, "carol");
+        when(userRepository.findByUsername("carol")).thenReturn(Optional.of(target));
+        when(userBlockRepository.existsByBlockerIdAndBlockedId(senderId, receiverId)).thenReturn(false);
+        when(userBlockRepository.existsByBlockerIdAndBlockedId(receiverId, senderId)).thenReturn(true);
+
+        assertThatThrownBy(() ->
+            friendshipService.sendRequest(senderId, new SendFriendRequestRequest("carol", null)))
+            .isInstanceOf(ResponseStatusException.class)
+            .hasMessageContaining("403");
     }
 
     private User makeUser(UUID id, String username) {

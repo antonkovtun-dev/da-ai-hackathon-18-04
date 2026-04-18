@@ -127,7 +127,7 @@ public class FriendshipService {
         User me = userRepository.findById(userId).orElseThrow();
         return reqs.stream()
             .map(r -> toRequestResponse(r,
-                users.getOrDefault(r.getSenderId(), me).getUsername(),
+                users.containsKey(r.getSenderId()) ? users.get(r.getSenderId()).getUsername() : "unknown",
                 me.getUsername()))
             .toList();
     }
@@ -141,7 +141,7 @@ public class FriendshipService {
         return reqs.stream()
             .map(r -> toRequestResponse(r,
                 me.getUsername(),
-                users.getOrDefault(r.getReceiverId(), me).getUsername()))
+                users.containsKey(r.getReceiverId()) ? users.get(r.getReceiverId()).getUsername() : "unknown"))
             .toList();
     }
 
