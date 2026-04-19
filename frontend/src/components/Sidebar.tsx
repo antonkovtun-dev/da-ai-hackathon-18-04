@@ -83,6 +83,12 @@ export default function Sidebar({ activeRoomId, activeDmId }: Props) {
         >
           Friends
         </button>
+        <button
+          onClick={() => navigate('/settings')}
+          className="w-full text-left text-gray-400 hover:text-white text-sm px-2 py-1 rounded hover:bg-gray-700 transition-colors"
+        >
+          Settings
+        </button>
       </div>
     </aside>
   )

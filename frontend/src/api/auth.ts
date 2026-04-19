@@ -45,3 +45,37 @@ export async function getMe(): Promise<User | null> {
   if (res.status === 401) return null
   return res.json()
 }
+
+export async function changePassword(currentPassword: string, newPassword: string): Promise<void> {
+  const res = await fetch('/api/users/me/password', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ currentPassword, newPassword }),
+    credentials: 'include',
+  })
+  if (!res.ok) throw new Error((await res.json().catch(() => ({}))).message || 'Failed')
+}
+
+export async function forgotPassword(email: string): Promise<void> {
+  await fetch('/api/auth/forgot-password', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email }),
+    credentials: 'include',
+  })
+}
+
+export async function resetPassword(token: string, newPassword: string): Promise<void> {
+  const res = await fetch('/api/auth/reset-password', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ token, newPassword }),
+    credentials: 'include',
+  })
+  if (!res.ok) throw new Error('Invalid or expired token')
+}
+
+export async function deleteAccount(): Promise<void> {
+  const res = await fetch('/api/users/me', { method: 'DELETE', credentials: 'include' })
+  if (!res.ok) throw new Error('Failed to delete account')
+}
