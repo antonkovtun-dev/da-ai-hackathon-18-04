@@ -2,9 +2,11 @@ package com.example.chat.users;
 
 import com.example.chat.bans.UserBlockRepository;
 import com.example.chat.common.FieldException;
+import com.example.chat.dm.DmThreadRepository;
 import com.example.chat.friendships.FriendRequestRepository;
 import com.example.chat.friendships.FriendshipRepository;
 import com.example.chat.memberships.RoomMembershipRepository;
+import com.example.chat.moderation.RoomBanRepository;
 import com.example.chat.presence.PresenceTabRepository;
 import com.example.chat.readstate.ReadStateRepository;
 import com.example.chat.rooms.RoomRepository;
@@ -27,6 +29,8 @@ public class UserService {
     private final FriendshipRepository friendshipRepository;
     private final FriendRequestRepository friendRequestRepository;
     private final UserBlockRepository userBlockRepository;
+    private final RoomBanRepository roomBanRepository;
+    private final DmThreadRepository dmThreadRepository;
     private final PresenceTabRepository presenceTabRepository;
     private final ReadStateRepository readStateRepository;
     private final PasswordEncoder passwordEncoder;
@@ -38,6 +42,8 @@ public class UserService {
                        FriendshipRepository friendshipRepository,
                        FriendRequestRepository friendRequestRepository,
                        UserBlockRepository userBlockRepository,
+                       RoomBanRepository roomBanRepository,
+                       DmThreadRepository dmThreadRepository,
                        PresenceTabRepository presenceTabRepository,
                        ReadStateRepository readStateRepository,
                        PasswordEncoder passwordEncoder,
@@ -48,6 +54,8 @@ public class UserService {
         this.friendshipRepository = friendshipRepository;
         this.friendRequestRepository = friendRequestRepository;
         this.userBlockRepository = userBlockRepository;
+        this.roomBanRepository = roomBanRepository;
+        this.dmThreadRepository = dmThreadRepository;
         this.presenceTabRepository = presenceTabRepository;
         this.readStateRepository = readStateRepository;
         this.passwordEncoder = passwordEncoder;
@@ -61,9 +69,11 @@ public class UserService {
 
         roomRepository.deleteByOwnerId(userId);
         membershipRepository.deleteByUserId(userId);
+        roomBanRepository.deleteByUserId(userId);
         friendshipRepository.deleteByUserId(userId);
         friendRequestRepository.deleteByUserId(userId);
         userBlockRepository.deleteByUserId(userId);
+        dmThreadRepository.deleteByUserId(userId);
         presenceTabRepository.deleteByUserId(userId);
         readStateRepository.deleteByUserId(userId);
 
