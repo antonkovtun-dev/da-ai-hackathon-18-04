@@ -63,7 +63,7 @@ public class AttachmentService {
         if (file.isEmpty())
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "File is empty");
 
-        String contentType = file.getContentType() != null ? file.getContentType() : "application/octet-stream";
+        String contentType = resolveContentType(file.getOriginalFilename());
         boolean isImage = contentType.startsWith("image/");
         long maxBytes = isImage ? 3L * 1024 * 1024 : 20L * 1024 * 1024;
         if (file.getSize() > maxBytes)
@@ -95,12 +95,14 @@ public class AttachmentService {
             Files.createDirectories(uploadDir);
             Files.copy(file.getInputStream(), uploadDir.resolve(storedName), StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException e) {
+            try { Files.deleteIfExists(uploadDir.resolve(storedName)); } catch (IOException ignored) {}
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "File storage failed", e);
         }
 
         readStateService.markRead(roomId, uploaderId);
 
-        User uploader = userRepository.findById(uploaderId).orElseThrow();
+        User uploader = userRepository.findById(uploaderId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.GONE, "User no longer exists"));
         AttachmentResponse attResp = new AttachmentResponse(
                 att.getId(), att.getFilename(), att.getContentType(), att.getSize());
         MessageResponse resp = new MessageResponse(
@@ -128,12 +130,44 @@ public class AttachmentService {
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + att.getFilename() + "\"")
                 .header("X-Content-Type-Options", "nosniff")
-                .contentType(MediaType.parseMediaType(att.getContentType()))
+                .contentType(safeParseMediaType(att.getContentType()))
                 .body(resource);
     }
 
     private String sanitize(String original) {
         if (original == null) return "file";
         return original.replaceAll("[^a-zA-Z0-9._\\-]", "_");
+    }
+
+    private static final java.util.Map<String, String> EXT_TO_MIME = java.util.Map.ofEntries(
+        java.util.Map.entry("jpg",  "image/jpeg"),
+        java.util.Map.entry("jpeg", "image/jpeg"),
+        java.util.Map.entry("png",  "image/png"),
+        java.util.Map.entry("gif",  "image/gif"),
+        java.util.Map.entry("webp", "image/webp"),
+        java.util.Map.entry("pdf",  "application/pdf"),
+        java.util.Map.entry("txt",  "text/plain"),
+        java.util.Map.entry("csv",  "text/csv"),
+        java.util.Map.entry("zip",  "application/zip"),
+        java.util.Map.entry("docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"),
+        java.util.Map.entry("xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
+        java.util.Map.entry("mp4",  "video/mp4"),
+        java.util.Map.entry("mp3",  "audio/mpeg")
+    );
+
+    private String resolveContentType(String filename) {
+        if (filename == null) return "application/octet-stream";
+        int dot = filename.lastIndexOf('.');
+        if (dot < 0) return "application/octet-stream";
+        String ext = filename.substring(dot + 1).toLowerCase();
+        return EXT_TO_MIME.getOrDefault(ext, "application/octet-stream");
+    }
+
+    private MediaType safeParseMediaType(String contentType) {
+        try {
+            return MediaType.parseMediaType(contentType);
+        } catch (Exception e) {
+            return MediaType.APPLICATION_OCTET_STREAM;
+        }
     }
 }
