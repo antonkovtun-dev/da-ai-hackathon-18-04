@@ -1,5 +1,8 @@
 package com.example.chat.messages;
 
+import com.example.chat.attachments.Attachment;
+import com.example.chat.attachments.AttachmentRepository;
+import com.example.chat.attachments.dto.AttachmentResponse;
 import com.example.chat.memberships.RoomMembership;
 import com.example.chat.memberships.RoomMembershipRepository;
 import com.example.chat.memberships.RoomRole;
@@ -29,17 +32,20 @@ public class MessageService {
     private final UserRepository userRepository;
     private final RoomEventPublisher eventPublisher;
     private final ReadStateService readStateService;
+    private final AttachmentRepository attachmentRepository;
 
     public MessageService(MessageRepository messageRepository,
                           RoomMembershipRepository membershipRepository,
                           UserRepository userRepository,
                           RoomEventPublisher eventPublisher,
-                          ReadStateService readStateService) {
+                          ReadStateService readStateService,
+                          AttachmentRepository attachmentRepository) {
         this.messageRepository = messageRepository;
         this.membershipRepository = membershipRepository;
         this.userRepository = userRepository;
         this.eventPublisher = eventPublisher;
         this.readStateService = readStateService;
+        this.attachmentRepository = attachmentRepository;
     }
 
     @Transactional
@@ -56,7 +62,7 @@ public class MessageService {
         readStateService.markRead(roomId, authorId);
 
         User author = userRepository.findById(authorId).orElseThrow();
-        MessageResponse resp = toResponse(msg, author.getUsername());
+        MessageResponse resp = toResponse(msg, author.getUsername(), null);
         eventPublisher.publishMessageNew(roomId, resp);
         return resp;
     }
@@ -71,7 +77,10 @@ public class MessageService {
         msg = messageRepository.save(msg);
         eventPublisher.publishMessageEdited(msg.getRoomId(), messageId, content, msg.getEditedAt());
         User author = userRepository.findById(requesterId).orElseThrow();
-        return toResponse(msg, author.getUsername());
+        AttachmentResponse attResp = attachmentRepository.findByMessageId(messageId)
+                .map(a -> new AttachmentResponse(a.getId(), a.getFilename(), a.getContentType(), a.getSize()))
+                .orElse(null);
+        return toResponse(msg, author.getUsername(), attResp);
     }
 
     @Transactional
@@ -109,8 +118,18 @@ public class MessageService {
         Map<UUID, String> usernames = userRepository.findAllById(authorIds).stream()
                 .collect(Collectors.toMap(User::getId, User::getUsername));
 
+        List<UUID> messageIds = messages.stream().map(Message::getId).toList();
+        Map<UUID, AttachmentResponse> attachmentMap = messageIds.isEmpty()
+                ? Map.of()
+                : attachmentRepository.findByMessageIdIn(messageIds).stream()
+                    .collect(Collectors.toMap(
+                        Attachment::getMessageId,
+                        a -> new AttachmentResponse(a.getId(), a.getFilename(), a.getContentType(), a.getSize())
+                    ));
+
         return messages.stream()
-                .map(m -> toResponse(m, usernames.getOrDefault(m.getAuthorId(), "unknown")))
+                .map(m -> toResponse(m, usernames.getOrDefault(m.getAuthorId(), "unknown"),
+                                     attachmentMap.get(m.getId())))
                 .toList();
     }
 
@@ -119,8 +138,8 @@ public class MessageService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Message not found"));
     }
 
-    private MessageResponse toResponse(Message m, String authorUsername) {
+    private MessageResponse toResponse(Message m, String authorUsername, AttachmentResponse attachment) {
         return new MessageResponse(m.getId(), m.getRoomId(), m.getAuthorId(), authorUsername,
-                m.getContent(), m.getCreatedAt(), m.getEditedAt(), m.getDeletedAt() != null);
+                m.getContent(), m.getCreatedAt(), m.getEditedAt(), m.getDeletedAt() != null, attachment);
     }
 }
