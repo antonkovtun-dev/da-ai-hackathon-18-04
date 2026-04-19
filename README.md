@@ -1,6 +1,6 @@
 # da-ai-hackathon-04-18 — Chat
 
-Classic web-based real-time chat application built for the DA AI Hackathon (2026-04-18).
+Classic web-based real-time chat application built for the DA AI DEMO (2026-04-18).
 
 ---
 
@@ -146,31 +146,17 @@ docker compose down           # stop and remove containers (data volumes preserv
 docker compose down -v        # also remove volumes (wipes database and uploads)
 ```
 
-### Local development (hot-reload)
+## Seed / demo data
 
-Run backend and frontend separately for fast iteration:
+No seed data is shipped. To reach a meaningful demo state after `docker compose up`:
 
-**Prerequisites:** JDK 21 and Node 18+ must be installed on the host.
-
-```bash
-# Terminal 1 — backend (requires Docker for Postgres)
-docker compose up postgres -d          # start only Postgres
-cd backend
-./mvnw spring-boot:run                 # hot-reload at :8080
-
-# Terminal 2 — frontend (proxies /api and /ws to :8080)
-cd frontend
-npm install
-npm run dev                            # Vite dev server at :5173
-```
-
-### Running tests
-
-```bash
-cd backend
-./mvnw test                            # requires Docker (Testcontainers starts a Postgres container)
-./mvnw test -Dtest=SomeServiceTest     # run a single test class
-```
+1. Open [http://localhost](http://localhost) and register a first user (e.g. `alice`).
+2. In a second browser (or incognito tab), register a second user (e.g. `bob`).
+3. As `alice`, create a public room named `general`.
+4. As `bob`, browse the room catalog and join `general`.
+5. Send messages between the two accounts to verify real-time delivery. Use separate browsers (or one normal + one incognito window) — sessions are cookie-scoped, so two tabs in the same browser share the same login.
+6. To test direct messages: as `alice`, send `bob` a friend request; accept it as `bob`; then open the DM from the contacts panel.
+7. To test file attachments: use the 📎 button or paste an image into the composer.
 
 ---
 
@@ -186,20 +172,6 @@ Copy `.env.example` to `.env` before starting. All variables have working defaul
 | `UPLOAD_DIR` | `/data/uploads` | Directory where the backend stores uploaded files — mapped to the `uploads_data` Docker volume |
 
 See `.env.example` for the full file with comments.
-
----
-
-## Seed / demo data
-
-No seed data is shipped. To reach a meaningful demo state after `docker compose up`:
-
-1. Open [http://localhost](http://localhost) and register a first user (e.g. `alice`).
-2. In a second browser (or incognito tab), register a second user (e.g. `bob`).
-3. As `alice`, create a public room named `general`.
-4. As `bob`, browse the room catalog and join `general`.
-5. Send messages between the two accounts to verify real-time delivery. Use separate browsers (or one normal + one incognito window) — sessions are cookie-scoped, so two tabs in the same browser share the same login.
-6. To test direct messages: as `alice`, send `bob` a friend request; accept it as `bob`; then open the DM from the contacts panel.
-7. To test file attachments: use the 📎 button or paste an image into the composer.
 
 ---
 
@@ -224,5 +196,5 @@ The spec left several behaviors open; the implementation commits to these resolu
 - **No email delivery.** Password reset tokens are logged to backend stdout. No SMTP integration.
 - **Local file storage only.** Uploads live in a Docker named volume — no object storage, no CDN, no antivirus scan. `docker compose down -v` permanently deletes all uploads.
 - **Presence granularity is ~30 s.** The heartbeat fires every 30 s; worst-case lag for a tab-close → offline transition is ~32 s.
-- **Single-region, single-instance.** No horizontal scaling, no Redis session store. Suitable for demo / hackathon use.
+- **Single-region, single-instance.** No horizontal scaling, no Redis session store. Suitable for demo use.
 - **Private rooms are API-only.** You can create a private room via `POST /api/rooms` with `"isPrivate": true`, but there is no UI to invite members or join one.

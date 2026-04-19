@@ -26,8 +26,10 @@ target/
 hs_err_pid*
 replay_pid*
 
-# Superpowers brainstorming sessions
+# AI tooling
 .superpowers/
+.claude/
+docs/superpowers/
 
 .env
 
