@@ -19,7 +19,7 @@ export default function RoomMembersPanel({ roomId, onOpenBanList, onDeleteRoom }
   const { user } = useAuthStore()
   const [members, setMembers] = useState<Member[]>([])
   const [loading, setLoading] = useState(true)
-  const [acting, setActing] = useState<string | null>(null)
+  const [acting, setActing] = useState<Record<string, boolean>>({})
 
   const myRole = members.find((m) => m.userId === user?.id)?.role ?? null
 
@@ -36,30 +36,33 @@ export default function RoomMembersPanel({ roomId, onOpenBanList, onDeleteRoom }
   useEffect(() => {
     setLoading(true)
     fetchMembers()
-  }, [fetchMembers])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [roomId])
 
   async function handleKick(m: Member) {
     if (!confirm(`Kick @${m.username} from this room?`)) return
-    setActing(m.userId)
+    setActing((a) => ({ ...a, [m.userId]: true }))
     try {
       await banUser(roomId, m.userId)
       await fetchMembers()
     } catch (e: unknown) {
       alert((e as Error).message || 'Failed to kick')
     } finally {
-      setActing(null)
+      setActing((a) => { const n = { ...a }; delete n[m.userId]; return n })
     }
   }
 
   async function handleSetRole(m: Member, role: 'ADMIN' | 'MEMBER') {
-    setActing(m.userId)
+    const verb = role === 'ADMIN' ? 'Promote' : 'Demote'
+    if (!confirm(`${verb} @${m.username}?`)) return
+    setActing((a) => ({ ...a, [m.userId]: true }))
     try {
       await setMemberRole(roomId, m.userId, role)
       await fetchMembers()
     } catch (e: unknown) {
       alert((e as Error).message || 'Failed to change role')
     } finally {
-      setActing(null)
+      setActing((a) => { const n = { ...a }; delete n[m.userId]; return n })
     }
   }
 
@@ -100,7 +103,7 @@ export default function RoomMembersPanel({ roomId, onOpenBanList, onDeleteRoom }
                   {m.role}
                 </span>
               </div>
-              {acting === m.userId ? (
+              {acting[m.userId] ? (
                 <span className="text-[10px] text-gray-500">working…</span>
               ) : (
                 (canKick(m) || canPromote(m) || canDemote(m)) && (
