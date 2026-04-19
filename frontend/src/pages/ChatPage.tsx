@@ -1,23 +1,26 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import { useRoomStore } from '../store/roomStore'
 import { useMessageStore } from '../store/messageStore'
 import { getMessages } from '../api/messages'
-import { getRoom, markRoomRead } from '../api/rooms'
+import { getRoom, markRoomRead, deleteRoom } from '../api/rooms'
 import { logout } from '../api/auth'
 import { useRoomSocket } from '../hooks/useRoomSocket'
 import { usePresenceHeartbeat } from '../hooks/usePresenceHeartbeat'
 import Sidebar from '../components/Sidebar'
 import MessageList from '../components/MessageList'
 import MessageComposer from '../components/MessageComposer'
+import RoomMembersPanel from '../components/RoomMembersPanel'
+import BanListModal from '../components/BanListModal'
 
 export default function ChatPage() {
   const { id: roomId } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { user, setUser } = useAuthStore()
-  const { myRooms, setActiveRoom, clearUnread, fetchMyRooms } = useRoomStore()
+  const { myRooms, setActiveRoom, clearUnread, fetchMyRooms, removeRoom } = useRoomStore()
   const { setMessages } = useMessageStore()
+  const [banListOpen, setBanListOpen] = useState(false)
 
   const room = myRooms.find((r) => r.id === roomId)
 
@@ -43,12 +46,26 @@ export default function ChatPage() {
     navigate('/login')
   }
 
+  async function handleDeleteRoom() {
+    if (!roomId) return
+    if (!confirm(`Permanently delete room #${room?.name ?? roomId}? All messages and files will be lost.`)) return
+    try {
+      await deleteRoom(roomId)
+      removeRoom(roomId)
+      navigate('/rooms')
+    } catch (e: unknown) {
+      alert((e as Error).message || 'Failed to delete room')
+    }
+  }
+
   return (
     <div className="flex flex-col h-screen bg-gray-900 text-white">
       <header className="flex items-center justify-between px-4 py-3 bg-gray-800 border-b border-gray-700 flex-shrink-0">
         <div className="flex items-center gap-3">
-          <button onClick={() => navigate('/rooms')}
-            className="text-gray-400 hover:text-white text-sm transition-colors">
+          <button
+            onClick={() => navigate('/rooms')}
+            className="text-gray-400 hover:text-white text-sm transition-colors"
+          >
             Browse Rooms
           </button>
           {room && <span className="text-gray-500">›</span>}
@@ -56,8 +73,10 @@ export default function ChatPage() {
         </div>
         <div className="flex items-center gap-3">
           <span className="text-gray-400 text-sm">@{user?.username}</span>
-          <button onClick={handleLogout}
-            className="text-sm bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded transition-colors">
+          <button
+            onClick={handleLogout}
+            className="text-sm bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded transition-colors"
+          >
             Logout
           </button>
         </div>
@@ -77,7 +96,18 @@ export default function ChatPage() {
             </div>
           )}
         </main>
+        {roomId && (
+          <RoomMembersPanel
+            roomId={roomId}
+            onOpenBanList={() => setBanListOpen(true)}
+            onDeleteRoom={handleDeleteRoom}
+          />
+        )}
       </div>
+
+      {banListOpen && roomId && (
+        <BanListModal roomId={roomId} onClose={() => setBanListOpen(false)} />
+      )}
     </div>
   )
 }
