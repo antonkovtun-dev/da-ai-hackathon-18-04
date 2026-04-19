@@ -1,9 +1,33 @@
 import { useRef, useEffect, useState } from 'react'
 import { useMessageStore } from '../store/messageStore'
 import { useAuthStore } from '../store/authStore'
-import { getMessages, editMessage, deleteMessage, type Message } from '../api/messages'
+import { getMessages, editMessage, deleteMessage, type Message, type Attachment } from '../api/messages'
 
 interface Props { roomId: string }
+
+function AttachmentView({ attachment }: { attachment: Attachment }) {
+  const url = `/api/attachments/${attachment.id}`
+  if (attachment.contentType.startsWith('image/')) {
+    return (
+      <a href={url} download={attachment.filename}>
+        <img
+          src={url}
+          alt={attachment.filename}
+          className="max-w-xs max-h-64 rounded mt-1 border border-gray-700 cursor-pointer"
+        />
+      </a>
+    )
+  }
+  return (
+    <a
+      href={url}
+      download={attachment.filename}
+      className="flex items-center gap-2 mt-1 text-indigo-400 hover:text-indigo-300 text-sm underline"
+    >
+      📄 {attachment.filename} ({Math.round(attachment.size / 1024)} KB)
+    </a>
+  )
+}
 
 export default function MessageList({ roomId }: Props) {
   const { messages, prependMessages, updateMessage, markDeleted } = useMessageStore()
@@ -40,7 +64,8 @@ export default function MessageList({ roomId }: Props) {
   async function submitEdit(id: string) {
     try {
       const updated = await editMessage(id, editContent)
-      updateMessage(roomId, updated)
+      // Pass only changed fields to avoid wiping the attachment field
+      updateMessage(roomId, { id: updated.id, content: updated.content, editedAt: updated.editedAt })
     } catch { /* ignore */ }
     setEditingId(null)
   }
@@ -100,7 +125,12 @@ export default function MessageList({ roomId }: Props) {
                     className="text-xs text-gray-400">Cancel</button>
                 </div>
               ) : (
-                <p className="text-gray-100 text-sm mt-0.5 whitespace-pre-wrap break-words">{msg.content}</p>
+                <>
+                  {msg.content && (
+                    <p className="text-gray-100 text-sm mt-0.5 whitespace-pre-wrap break-words">{msg.content}</p>
+                  )}
+                  {msg.attachment && <AttachmentView attachment={msg.attachment} />}
+                </>
               )}
             </>
           )}
