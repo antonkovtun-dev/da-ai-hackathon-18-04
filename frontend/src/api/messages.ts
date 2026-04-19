@@ -1,3 +1,10 @@
+export interface Attachment {
+  id: string
+  filename: string
+  contentType: string
+  size: number
+}
+
 export interface Message {
   id: string
   roomId: string
@@ -7,6 +14,7 @@ export interface Message {
   createdAt: string
   editedAt: string | null
   deleted: boolean
+  attachment: Attachment | null
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
