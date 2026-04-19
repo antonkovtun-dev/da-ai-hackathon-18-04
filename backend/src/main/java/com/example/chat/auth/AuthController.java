@@ -3,6 +3,8 @@ package com.example.chat.auth;
 import com.example.chat.auth.dto.LoginRequest;
 import com.example.chat.auth.dto.RegisterRequest;
 import com.example.chat.auth.dto.UserResponse;
+import com.example.chat.sessions.UserSessionMeta;
+import com.example.chat.sessions.UserSessionMetaRepository;
 import com.example.chat.users.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -30,17 +32,20 @@ public class AuthController {
     private final HttpSessionSecurityContextRepository securityContextRepository;
     private final UserRepository userRepository;
     private final PasswordResetService passwordResetService;
+    private final UserSessionMetaRepository userSessionMetaRepository;
 
     public AuthController(AuthService authService,
                           AuthenticationManager authenticationManager,
                           HttpSessionSecurityContextRepository securityContextRepository,
                           UserRepository userRepository,
-                          PasswordResetService passwordResetService) {
+                          PasswordResetService passwordResetService,
+                          UserSessionMetaRepository userSessionMetaRepository) {
         this.authService = authService;
         this.authenticationManager = authenticationManager;
         this.securityContextRepository = securityContextRepository;
         this.userRepository = userRepository;
         this.passwordResetService = passwordResetService;
+        this.userSessionMetaRepository = userSessionMetaRepository;
     }
 
     @PostMapping("/register")
@@ -100,6 +105,17 @@ public class AuthController {
             context.setAuthentication(auth);
             SecurityContextHolder.setContext(context);
             securityContextRepository.saveContext(context, request, response);
+            HttpSession sess = request.getSession(false);
+            if (sess != null) {
+                AuthUserDetails details = (AuthUserDetails) auth.getPrincipal();
+                UserSessionMeta meta = new UserSessionMeta();
+                meta.setSessionId(sess.getId());
+                meta.setUserId(details.getUserId());
+                String ua = request.getHeader("User-Agent");
+                meta.setUserAgent(ua != null ? ua.substring(0, Math.min(ua.length(), 512)) : null);
+                meta.setIpAddress(request.getRemoteAddr());
+                userSessionMetaRepository.save(meta);
+            }
         } catch (AuthenticationException ex) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials");
         }

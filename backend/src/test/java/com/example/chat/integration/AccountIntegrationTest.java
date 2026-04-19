@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.jdbc.core.JdbcTemplate;
 
+import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -129,6 +130,29 @@ class AccountIntegrationTest extends IntegrationTestBase {
         assertThat(restTemplate.postForEntity("/api/auth/login",
                 new LoginRequest("carol@example.com", "newpass123"), Void.class)
                 .getStatusCode()).isEqualTo(HttpStatus.OK);
+    }
+
+    @Test
+    void listSessions_returns_current_session_and_revoke_invalidates_it() {
+        var resp = restTemplate.postForEntity("/api/auth/register",
+                new RegisterRequest("dan@example.com", "dan", "password123"), Void.class);
+        String session = sessionCookie(resp);
+
+        var listResp = restTemplate.exchange("/api/sessions", HttpMethod.GET,
+                withSession(session), List.class);
+        assertThat(listResp.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(listResp.getBody()).hasSize(1);
+
+        @SuppressWarnings("unchecked")
+        String sessionId = (String) ((Map<?, ?>) listResp.getBody().get(0)).get("sessionId");
+
+        var revokeResp = restTemplate.exchange("/api/sessions/" + sessionId, HttpMethod.DELETE,
+                withSession(session), Void.class);
+        assertThat(revokeResp.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+
+        var meResp = restTemplate.exchange("/api/auth/me", HttpMethod.GET,
+                withSession(session), Void.class);
+        assertThat(meResp.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
     }
 
     // --- helpers ---
