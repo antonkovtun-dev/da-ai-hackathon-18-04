@@ -1,11 +1,13 @@
-import { useState, type KeyboardEvent } from 'react'
+import { useState, useRef, type KeyboardEvent, type ClipboardEvent } from 'react'
 import { sendMessage } from '../api/messages'
+import { uploadAttachment } from '../api/attachments'
 
 interface Props { roomId: string }
 
 export default function MessageComposer({ roomId }: Props) {
   const [content, setContent] = useState('')
   const [sending, setSending] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   async function send() {
     const text = content.trim()
@@ -22,6 +24,24 @@ export default function MessageComposer({ roomId }: Props) {
     }
   }
 
+  async function sendFile(file: File) {
+    if (sending) return
+    setSending(true)
+    try {
+      await uploadAttachment(roomId, file, content.trim() || undefined)
+      setContent('')
+    } catch (e: unknown) {
+      const err = e as { message?: string; status?: number }
+      if (err.status === 400) {
+        alert('File too large or invalid (images ≤ 3 MB, files ≤ 20 MB)')
+      } else {
+        alert(err.message || 'Upload failed')
+      }
+    } finally {
+      setSending(false)
+    }
+  }
+
   function onKeyDown(e: KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
@@ -29,13 +49,44 @@ export default function MessageComposer({ roomId }: Props) {
     }
   }
 
+  function onPaste(e: ClipboardEvent<HTMLTextAreaElement>) {
+    const file = Array.from(e.clipboardData.items)
+      .find(item => item.kind === 'file')
+      ?.getAsFile()
+    if (file) {
+      e.preventDefault()
+      sendFile(file)
+    }
+  }
+
+  function onFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (file) sendFile(file)
+    e.target.value = ''
+  }
+
   return (
     <div className="flex-shrink-0 p-3 border-t border-gray-700 bg-gray-900">
+      <input
+        ref={fileInputRef}
+        type="file"
+        className="hidden"
+        onChange={onFileChange}
+      />
       <div className="flex gap-2 items-end">
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          disabled={sending}
+          title="Attach file"
+          className="flex-shrink-0 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 p-2 rounded-lg transition-colors"
+        >
+          📎
+        </button>
         <textarea
           value={content}
           onChange={(e) => setContent(e.target.value)}
           onKeyDown={onKeyDown}
+          onPaste={onPaste}
           placeholder="Type a message… (Enter to send, Shift+Enter for newline)"
           maxLength={3000}
           rows={1}
