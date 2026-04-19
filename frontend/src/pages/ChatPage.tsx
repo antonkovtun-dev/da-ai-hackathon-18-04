@@ -30,6 +30,7 @@ export default function ChatPage() {
 
   useEffect(() => {
     if (!roomId) return
+    setIsAdmin(false)
     setActiveRoom(roomId)
     clearUnread(roomId)
     markRoomRead(roomId).catch(() => {})
