@@ -10,25 +10,98 @@ Full-featured group and direct-message chat: user accounts, persistent sessions,
 
 ---
 
-## What works and what doesn't
+## Feature checklist — spec vs. implementation
 
-### Working end-to-end
+### §1 User accounts
+| Requirement | Status |
+|---|---|
+| Register with unique email / username / password | ✅ Done |
+| Sign in with email + password | ✅ Done |
+| Persistent login across browser close | ✅ Done |
+| Sign out invalidates current session only | ✅ Done |
+| Password change (authenticated) | ✅ Done |
+| Password reset (token logged to backend stdout) | ✅ Done |
+| Account deletion with full cascade + `[deleted user]` for authored messages | ✅ Done |
 
-- **Accounts** — register, login, logout, change password, password reset (token printed to backend log), delete account (cascades all data), persistent sessions with list-and-revoke per device.
-- **Rooms** — create public or private rooms, browse and search the public catalog, join/leave, real-time messaging with edit and delete, cursor-paginated history, file and image attachments (upload via button or paste), unread badges.
-- **Moderation** — room owner can promote members to admin, demote admins, kick (= ban) members, view and manage the room ban list, delete the room entirely.
-- **Friends and direct messages** — send friend requests by username with an optional message, accept/decline/cancel, remove friends, open a DM thread from the contacts panel, real-time DM delivery with edit and delete.
-- **User blocks** — block a user (terminates friendship, cancels pending requests, freezes DM history), unblock to restore eligibility.
-- **Presence** — online / AFK / offline status derived from per-tab heartbeats; green/yellow/gray dots next to members in the room panel and DM contacts in the sidebar.
-- **Settings page** — change password, view active sessions (browser hint + IP + last-active time), revoke any session individually, delete account.
-- **Real-time** — all events (new messages, edits/deletes, presence changes, unread counts, membership changes) are pushed over WebSocket; the client resyncs automatically on reconnect.
+### §2 Sessions
+| Requirement | Status |
+|---|---|
+| Multiple simultaneous sessions | ✅ Done |
+| Session list (browser hint, IP, last-active) | ✅ Done |
+| Revoke any individual session | ✅ Done |
+| Logout only affects current session | ✅ Done |
 
-### Not implemented
+### §3 Contacts / friends
+| Requirement | Status |
+|---|---|
+| Send friend request by username (with optional message) | ✅ Done |
+| Send friend request from room member list | ✅ Done |
+| Accept / decline / cancel requests | ✅ Done |
+| Remove friend | ✅ Done |
+| Friend removal makes existing DM thread read-only | ✅ Done |
 
-- **Message replies** — there is no reply-to / quoted-message feature. Messages stand alone.
-- **Private room invitations** — the backend database table (`room_invitations`) and the invitation status model are designed, but the invitation service, controller, and all frontend flows (send invite, accept/decline, pending-invites inbox) were not built. In practice this means private rooms exist in the system but cannot be joined through the UI — they can only be tested via the raw API.
-- **Email delivery** — password reset tokens are written to the backend log (`INFO` level). No SMTP integration exists.
-- **Room visibility change** — public/private is fixed at creation time and cannot be converted later.
+### §4 User-to-user bans
+| Requirement | Status |
+|---|---|
+| Block user (terminates friendship, freezes DM, blocks future contact) | ✅ Done |
+| Unblock restores eligibility (no auto-restore of friendship) | ✅ Done |
+
+### §5 Rooms
+| Requirement | Status |
+|---|---|
+| Public room catalog (browse, search, paginate, join) | ✅ Done |
+| Private rooms hidden from catalog | ✅ Done |
+| Globally unique room names | ✅ Done |
+| Owner is singular, cannot be demoted or leave | ✅ Done |
+| Admins can delete messages, kick/ban/unban members, view ban list | ✅ Done |
+| Owner can promote/demote admins and delete the room | ✅ Done |
+| Kicking = ban; kicked user cannot rejoin until unbanned | ✅ Done |
+| Room deletion removes all messages, files, attachments | ✅ Done |
+| Public ↔ private conversion | ⏭ Skipped (out of scope per spec) |
+
+### §6 Room invitations
+| Requirement | Status |
+|---|---|
+| Invite user by username (owner/admin only) | ❌ Not built |
+| Invitation lifecycle (pending → accepted / declined / canceled / expired) | ❌ Not built |
+| Invitations auto-expire after 7 days | ❌ Not built |
+| Private rooms joinable via invitation | ❌ Not built |
+
+### §7 Messaging
+| Requirement | Status |
+|---|---|
+| Plain text, multiline, emoji (max 3 KB) | ✅ Done |
+| File attachments (images ≤ 3 MB, files ≤ 20 MB) via button or paste | ✅ Done |
+| Optional comment on attachment | ✅ Done |
+| Edit own messages (shows "edited" indicator) | ✅ Done |
+| Delete own messages; admins can delete any message | ✅ Done |
+| Cursor-based infinite scroll (stable under live inserts) | ✅ Done |
+| Offline delivery (messages persist; delivered on reconnect) | ✅ Done |
+| Reply to a message (quoted/outlined in UI) | ❌ Not built |
+
+### §8 Unread state
+| Requirement | Status |
+|---|---|
+| Unread count badge per room and DM thread | ✅ Done |
+| Cleared when user opens the chat | ✅ Done |
+| Real-time increment via WebSocket | ✅ Done |
+
+### §9 UI layout
+| Requirement | Status |
+|---|---|
+| Sidebar (rooms + DMs + unread badges) always visible | ✅ Done |
+| Central message timeline | ✅ Done |
+| Right member panel (room members + presence dots) | ✅ Done |
+| Bottom message composer | ✅ Done |
+| Admin modals (ban list, role management) | ✅ Done |
+
+### Presence
+| Requirement | Status |
+|---|---|
+| Per-tab heartbeat model | ✅ Done |
+| Online / AFK / offline derivation | ✅ Done |
+| Status propagates to other clients within ~2 s | ✅ Done |
+| Visual presence indicators (dots in member panel + DM sidebar) | ✅ Done |
 
 ---
 
