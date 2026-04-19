@@ -10,6 +10,7 @@ import com.example.chat.moderation.RoomBanRepository;
 import com.example.chat.presence.PresenceTabRepository;
 import com.example.chat.readstate.ReadStateRepository;
 import com.example.chat.rooms.RoomRepository;
+import com.example.chat.sessions.UserSessionMetaRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -33,6 +34,7 @@ public class UserService {
     private final DmThreadRepository dmThreadRepository;
     private final PresenceTabRepository presenceTabRepository;
     private final ReadStateRepository readStateRepository;
+    private final UserSessionMetaRepository userSessionMetaRepository;
     private final PasswordEncoder passwordEncoder;
     private final JdbcTemplate jdbcTemplate;
 
@@ -46,6 +48,7 @@ public class UserService {
                        DmThreadRepository dmThreadRepository,
                        PresenceTabRepository presenceTabRepository,
                        ReadStateRepository readStateRepository,
+                       UserSessionMetaRepository userSessionMetaRepository,
                        PasswordEncoder passwordEncoder,
                        JdbcTemplate jdbcTemplate) {
         this.userRepository = userRepository;
@@ -58,6 +61,7 @@ public class UserService {
         this.dmThreadRepository = dmThreadRepository;
         this.presenceTabRepository = presenceTabRepository;
         this.readStateRepository = readStateRepository;
+        this.userSessionMetaRepository = userSessionMetaRepository;
         this.passwordEncoder = passwordEncoder;
         this.jdbcTemplate = jdbcTemplate;
     }
@@ -76,6 +80,7 @@ public class UserService {
         dmThreadRepository.deleteByUserId(userId);
         presenceTabRepository.deleteByUserId(userId);
         readStateRepository.deleteByUserId(userId);
+        userSessionMetaRepository.deleteByUserId(userId);
 
         user.setDeletedAt(OffsetDateTime.now());
         userRepository.save(user);
