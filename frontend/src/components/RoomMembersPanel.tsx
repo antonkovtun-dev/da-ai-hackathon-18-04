@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useAuthStore } from '../store/authStore'
 import { getMembers, setMemberRole, banUser } from '../api/rooms'
 import type { Member } from '../api/rooms'
+import { useRoomStore } from '../store/roomStore'
 
 interface Props {
   roomId: string
@@ -17,6 +18,7 @@ const ROLE_BADGE: Record<string, string> = {
 
 export default function RoomMembersPanel({ roomId, onOpenBanList, onDeleteRoom }: Props) {
   const { user } = useAuthStore()
+  const { presence } = useRoomStore()
   const [members, setMembers] = useState<Member[]>([])
   const [loading, setLoading] = useState(true)
   const [acting, setActing] = useState<Record<string, boolean>>({})
@@ -83,6 +85,13 @@ export default function RoomMembersPanel({ roomId, onOpenBanList, onDeleteRoom }
     target.role === 'ADMIN' &&
     target.userId !== user?.id
 
+  function presenceDot(userId: string) {
+    const status = presence[userId] ?? 'OFFLINE'
+    if (status === 'ONLINE')  return <span className="w-2 h-2 rounded-full bg-green-400 flex-shrink-0" title="Online" />
+    if (status === 'AFK')     return <span className="w-2 h-2 rounded-full bg-yellow-400 flex-shrink-0" title="AFK" />
+    return <span className="w-2 h-2 rounded-full bg-gray-600 flex-shrink-0" title="Offline" />
+  }
+
   return (
     <aside className="w-48 flex-shrink-0 bg-gray-800 border-l border-gray-700 flex flex-col text-sm">
       <div className="px-3 py-2 border-b border-gray-700 flex items-center justify-between">
@@ -97,6 +106,7 @@ export default function RoomMembersPanel({ roomId, onOpenBanList, onDeleteRoom }
           members.map((m) => (
             <div key={m.userId} className="px-3 py-1.5 hover:bg-gray-700">
               <div className="flex items-center gap-1.5 min-w-0">
+                {presenceDot(m.userId)}
                 <span className="truncate text-gray-200 text-xs">@{m.username}</span>
                 <span className={`flex-shrink-0 text-[10px] px-1 rounded ${ROLE_BADGE[m.role]}`}>
                   {m.role}

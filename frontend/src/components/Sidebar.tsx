@@ -11,7 +11,7 @@ interface Props {
 }
 
 export default function Sidebar({ activeRoomId, activeDmId }: Props) {
-  const { myRooms, unread, setUnread } = useRoomStore()
+  const { myRooms, unread, setUnread, presence } = useRoomStore()
   const { threads, setThreads } = useDmStore()
   const navigate = useNavigate()
 
@@ -19,6 +19,13 @@ export default function Sidebar({ activeRoomId, activeDmId }: Props) {
     listThreads().then(setThreads).catch(() => {})
     getUnreadCounts().then(setUnread).catch(() => {})
   }, [])
+
+  function dot(userId?: string) {
+    if (!userId) return null
+    const s = presence[userId] ?? 'OFFLINE'
+    const cls = s === 'ONLINE' ? 'bg-green-400' : s === 'AFK' ? 'bg-yellow-400' : 'bg-gray-600'
+    return <span className={`w-2 h-2 rounded-full flex-shrink-0 ${cls}`} />
+  }
 
   return (
     <aside className="w-56 flex-shrink-0 bg-gray-800 border-r border-gray-700 flex flex-col">
@@ -63,7 +70,10 @@ export default function Sidebar({ activeRoomId, activeDmId }: Props) {
                   t.id === activeDmId ? 'bg-gray-700 text-white' : 'text-gray-300'
                 }`}
               >
-                <span className="truncate">@ {t.otherUsername}</span>
+                <span className="flex items-center gap-1.5 truncate">
+                  {dot(t.otherUserId)}
+                  @ {t.otherUsername}
+                </span>
               </button>
             ))}
           </nav>
