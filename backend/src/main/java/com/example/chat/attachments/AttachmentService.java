@@ -70,7 +70,7 @@ public class AttachmentService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     isImage ? "Image exceeds 3 MB limit" : "File exceeds 20 MB limit");
 
-        // Create message
+        // Create message record first
         Message msg = new Message();
         msg.setRoomId(roomId);
         msg.setAuthorId(uploaderId);
@@ -78,16 +78,8 @@ public class AttachmentService {
         msg.setContent(trimmed.isEmpty() ? null : trimmed);
         msg = messageRepository.save(msg);
 
-        // Store file — UUID filename prevents path traversal
+        // Create attachment record (DB save before file write — on DB failure, no file is created)
         String storedName = UUID.randomUUID().toString();
-        try {
-            Files.createDirectories(uploadDir);
-            Files.copy(file.getInputStream(), uploadDir.resolve(storedName), StandardCopyOption.REPLACE_EXISTING);
-        } catch (IOException e) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "File storage failed");
-        }
-
-        // Save attachment record
         Attachment att = new Attachment();
         att.setMessageId(msg.getId());
         att.setRoomId(roomId);
@@ -97,6 +89,14 @@ public class AttachmentService {
         att.setSize(file.getSize());
         att.setStoredPath(storedName);
         att = attachmentRepository.save(att);
+
+        // Write file last — if this throws, Spring rolls back DB saves above
+        try {
+            Files.createDirectories(uploadDir);
+            Files.copy(file.getInputStream(), uploadDir.resolve(storedName), StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "File storage failed", e);
+        }
 
         readStateService.markRead(roomId, uploaderId);
 
@@ -110,6 +110,7 @@ public class AttachmentService {
         return resp;
     }
 
+    @Transactional(readOnly = true)
     public ResponseEntity<Resource> download(UUID attachmentId, UUID requesterId) {
         Attachment att = attachmentRepository.findById(attachmentId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
@@ -125,7 +126,8 @@ public class AttachmentService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "File missing on disk");
 
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + att.getFilename() + "\"")
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + att.getFilename() + "\"")
+                .header("X-Content-Type-Options", "nosniff")
                 .contentType(MediaType.parseMediaType(att.getContentType()))
                 .body(resource);
     }
