@@ -3,7 +3,7 @@ import { useMessageStore } from '../store/messageStore'
 import { useAuthStore } from '../store/authStore'
 import { getMessages, editMessage, deleteMessage, type Message, type Attachment } from '../api/messages'
 
-interface Props { roomId: string }
+interface Props { roomId: string; isAdmin?: boolean }
 
 function AttachmentView({ attachment }: { attachment: Attachment }) {
   const url = `/api/attachments/${attachment.id}`
@@ -29,7 +29,7 @@ function AttachmentView({ attachment }: { attachment: Attachment }) {
   )
 }
 
-export default function MessageList({ roomId }: Props) {
+export default function MessageList({ roomId, isAdmin = false }: Props) {
   const { messages, prependMessages, updateMessage, markDeleted } = useMessageStore()
   const { user } = useAuthStore()
   const roomMessages = messages[roomId] ?? []
@@ -98,7 +98,7 @@ export default function MessageList({ roomId }: Props) {
                   {new Date(msg.createdAt).toLocaleTimeString()}
                   {msg.editedAt && ' (edited)'}
                 </span>
-                {msg.authorId === user?.id && editingId !== msg.id && (
+                {(msg.authorId === user?.id || isAdmin) && editingId !== msg.id && (
                   <div className="ml-auto hidden group-hover:flex gap-2">
                     <button onClick={() => handleEdit(msg)}
                       className="text-gray-400 hover:text-white text-xs">edit</button>

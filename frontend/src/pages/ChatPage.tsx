@@ -4,7 +4,7 @@ import { useAuthStore } from '../store/authStore'
 import { useRoomStore } from '../store/roomStore'
 import { useMessageStore } from '../store/messageStore'
 import { getMessages } from '../api/messages'
-import { getRoom, markRoomRead, deleteRoom } from '../api/rooms'
+import { getRoom, markRoomRead, deleteRoom, getMembers } from '../api/rooms'
 import { logout } from '../api/auth'
 import { useRoomSocket } from '../hooks/useRoomSocket'
 import { usePresenceHeartbeat } from '../hooks/usePresenceHeartbeat'
@@ -21,6 +21,7 @@ export default function ChatPage() {
   const { myRooms, setActiveRoom, clearUnread, fetchMyRooms, removeRoom } = useRoomStore()
   const { setMessages } = useMessageStore()
   const [banListOpen, setBanListOpen] = useState(false)
+  const [isAdmin, setIsAdmin] = useState(false)
 
   const room = myRooms.find((r) => r.id === roomId)
 
@@ -36,6 +37,11 @@ export default function ChatPage() {
     getRoom(roomId).catch(() => navigate('/rooms'))
     getMessages(roomId).then((msgs) => setMessages(roomId, msgs))
     fetchMyRooms()
+
+    getMembers(roomId).then((members) => {
+      const me = members.find((m) => m.userId === user?.id)
+      setIsAdmin(me?.role === 'OWNER' || me?.role === 'ADMIN')
+    }).catch(() => {})
 
     return () => setActiveRoom(null)
   }, [roomId])
@@ -87,7 +93,7 @@ export default function ChatPage() {
         <main className="flex-1 flex flex-col overflow-hidden">
           {roomId ? (
             <>
-              <MessageList roomId={roomId} />
+              <MessageList roomId={roomId} isAdmin={isAdmin} />
               <MessageComposer roomId={roomId} />
             </>
           ) : (
