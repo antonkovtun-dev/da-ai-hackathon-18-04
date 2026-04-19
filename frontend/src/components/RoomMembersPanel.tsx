@@ -3,6 +3,7 @@ import { useAuthStore } from '../store/authStore'
 import { getMembers, setMemberRole, banUser } from '../api/rooms'
 import type { Member } from '../api/rooms'
 import { useRoomStore } from '../store/roomStore'
+import { getFriends, sendFriendRequest } from '../api/friends'
 
 interface Props {
   roomId: string
@@ -22,6 +23,8 @@ export default function RoomMembersPanel({ roomId, onOpenBanList, onDeleteRoom }
   const [members, setMembers] = useState<Member[]>([])
   const [loading, setLoading] = useState(true)
   const [acting, setActing] = useState<Record<string, boolean>>({})
+  const [friendIds, setFriendIds] = useState<Set<string>>(new Set())
+  const [addingFriend, setAddingFriend] = useState<Record<string, boolean>>({})
 
   const myRole = members.find((m) => m.userId === user?.id)?.role ?? null
 
@@ -38,6 +41,7 @@ export default function RoomMembersPanel({ roomId, onOpenBanList, onDeleteRoom }
   useEffect(() => {
     setLoading(true)
     fetchMembers()
+    getFriends().then((list) => setFriendIds(new Set(list.map((f) => f.userId)))).catch(() => {})
   }, [fetchMembers])
 
   async function handleKick(m: Member) {
@@ -85,6 +89,24 @@ export default function RoomMembersPanel({ roomId, onOpenBanList, onDeleteRoom }
     target.role === 'ADMIN' &&
     target.userId !== user?.id
 
+  const canAddFriend = (m: Member) =>
+    m.userId !== user?.id && !friendIds.has(m.userId)
+
+  async function handleAddFriend(m: Member) {
+    setAddingFriend((a) => ({ ...a, [m.userId]: true }))
+    try {
+      await sendFriendRequest(m.username)
+      setFriendIds((s) => new Set([...s, m.userId]))
+    } catch (e: unknown) {
+      const msg = (e as Error).message || ''
+      if (!msg.toLowerCase().includes('already')) {
+        alert(msg || 'Could not send friend request')
+      }
+    } finally {
+      setAddingFriend((a) => { const n = { ...a }; delete n[m.userId]; return n })
+    }
+  }
+
   function presenceDot(userId: string) {
     const status = presence[userId] ?? 'OFFLINE'
     if (status === 'ONLINE')  return <span className="w-2 h-2 rounded-full bg-green-400 flex-shrink-0" title="Online" />
@@ -115,7 +137,7 @@ export default function RoomMembersPanel({ roomId, onOpenBanList, onDeleteRoom }
               {acting[m.userId] ? (
                 <span className="text-[10px] text-gray-500">working…</span>
               ) : (
-                (canKick(m) || canPromote(m) || canDemote(m)) && (
+                (canKick(m) || canPromote(m) || canDemote(m) || canAddFriend(m)) && (
                   <div className="flex gap-1.5 mt-0.5 flex-wrap">
                     {canKick(m) && (
                       <button
@@ -139,6 +161,15 @@ export default function RoomMembersPanel({ roomId, onOpenBanList, onDeleteRoom }
                         className="text-[10px] text-gray-400 hover:text-gray-200"
                       >
                         demote
+                      </button>
+                    )}
+                    {canAddFriend(m) && (
+                      <button
+                        onClick={() => handleAddFriend(m)}
+                        disabled={addingFriend[m.userId]}
+                        className="text-[10px] text-indigo-400 hover:text-indigo-300 disabled:opacity-50"
+                      >
+                        {addingFriend[m.userId] ? '…' : '+friend'}
                       </button>
                     )}
                   </div>
