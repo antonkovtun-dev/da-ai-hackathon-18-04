@@ -100,8 +100,10 @@ export default function MessageList({ roomId, isAdmin = false }: Props) {
                 </span>
                 {(msg.authorId === user?.id || isAdmin) && editingId !== msg.id && (
                   <div className="ml-auto hidden group-hover:flex gap-2">
-                    <button onClick={() => handleEdit(msg)}
-                      className="text-gray-400 hover:text-white text-xs">edit</button>
+                    {msg.authorId === user?.id && (
+                      <button onClick={() => handleEdit(msg)}
+                        className="text-gray-400 hover:text-white text-xs">edit</button>
+                    )}
                     <button onClick={() => handleDelete(msg.id)}
                       className="text-gray-400 hover:text-red-400 text-xs">delete</button>
                   </div>
