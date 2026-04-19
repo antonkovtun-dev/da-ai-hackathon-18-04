@@ -1,19 +1,18 @@
 import { useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { useRoomStore } from '../store/roomStore'
 import { useDmStore } from '../store/dmStore'
 import { listThreads } from '../api/dm'
 import { getUnreadCounts } from '../api/rooms'
 
-interface Props {
-  activeRoomId?: string
-  activeDmId?: string
-}
-
-export default function Sidebar({ activeRoomId, activeDmId }: Props) {
+export default function Sidebar() {
   const { myRooms, unread, setUnread, presence } = useRoomStore()
   const { threads, setThreads } = useDmStore()
   const navigate = useNavigate()
+  const { pathname } = useLocation()
+
+  const activeRoomId = pathname.startsWith('/rooms/') ? pathname.split('/')[2] : undefined
+  const activeDmId = pathname.startsWith('/dm/') ? pathname.split('/')[2] : undefined
 
   useEffect(() => {
     listThreads().then(setThreads).catch(() => {})

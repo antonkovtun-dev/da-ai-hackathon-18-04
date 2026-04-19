@@ -8,7 +8,6 @@ import { getRoom, markRoomRead, deleteRoom, getMembers } from '../api/rooms'
 import { logout } from '../api/auth'
 import { useRoomSocket } from '../hooks/useRoomSocket'
 import { usePresenceHeartbeat } from '../hooks/usePresenceHeartbeat'
-import Sidebar from '../components/Sidebar'
 import MessageList from '../components/MessageList'
 import MessageComposer from '../components/MessageComposer'
 import RoomMembersPanel from '../components/RoomMembersPanel'
@@ -66,16 +65,9 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-gray-900 text-white">
+    <>
       <header className="flex items-center justify-between px-4 py-3 bg-gray-800 border-b border-gray-700 flex-shrink-0">
         <div className="flex items-center gap-3">
-          <button
-            onClick={() => navigate('/rooms')}
-            className="text-gray-400 hover:text-white text-sm transition-colors"
-          >
-            Browse Rooms
-          </button>
-          {room && <span className="text-gray-500">›</span>}
           {room && <span className="font-semibold">#{room.name}</span>}
         </div>
         <div className="flex items-center gap-3">
@@ -90,7 +82,6 @@ export default function ChatPage() {
       </header>
 
       <div className="flex flex-1 overflow-hidden">
-        <Sidebar activeRoomId={roomId} />
         <main className="flex-1 flex flex-col overflow-hidden">
           {roomId ? (
             <>
@@ -115,6 +106,6 @@ export default function ChatPage() {
       {banListOpen && roomId && (
         <BanListModal roomId={roomId} onClose={() => setBanListOpen(false)} />
       )}
-    </div>
+    </>
   )
 }

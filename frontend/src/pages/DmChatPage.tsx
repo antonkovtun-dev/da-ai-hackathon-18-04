@@ -5,7 +5,6 @@ import { useDmStore } from '../store/dmStore'
 import { useDmSocket } from '../hooks/useDmSocket'
 import { getDmMessages, sendDmMessage, editDmMessage, deleteDmMessage, type DmMessage } from '../api/dm'
 import { logout } from '../api/auth'
-import Sidebar from '../components/Sidebar'
 
 export default function DmChatPage() {
   const { id: threadId } = useParams<{ id: string }>()
@@ -95,10 +94,7 @@ export default function DmChatPage() {
   }
 
   return (
-    <div className="flex h-screen bg-gray-900 text-white">
-      <Sidebar activeDmId={threadId} />
-
-      <div className="flex flex-col flex-1 overflow-hidden">
+    <div className="flex flex-col flex-1 overflow-hidden">
         <header className="flex items-center justify-between px-4 py-3 bg-gray-800 border-b border-gray-700 flex-shrink-0">
           <div className="flex items-center gap-3">
             <button onClick={() => navigate('/friends')}
@@ -193,7 +189,6 @@ export default function DmChatPage() {
             </button>
           </div>
         </div>
-      </div>
     </div>
   )
 }
