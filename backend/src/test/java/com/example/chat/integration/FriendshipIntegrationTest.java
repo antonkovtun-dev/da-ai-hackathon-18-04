@@ -2,6 +2,7 @@ package com.example.chat.integration;
 
 import com.example.chat.auth.dto.LoginRequest;
 import com.example.chat.auth.dto.RegisterRequest;
+import com.example.chat.attachments.AttachmentRepository;
 import com.example.chat.bans.UserBlockRepository;
 import com.example.chat.bans.dto.BlockRequest;
 import com.example.chat.friendships.FriendRequestRepository;
@@ -10,6 +11,12 @@ import com.example.chat.friendships.FriendshipRepository;
 import com.example.chat.friendships.dto.FriendRequestResponse;
 import com.example.chat.friendships.dto.FriendResponse;
 import com.example.chat.friendships.dto.SendFriendRequestRequest;
+import com.example.chat.memberships.RoomMembershipRepository;
+import com.example.chat.messages.MessageRepository;
+import com.example.chat.moderation.RoomBanRepository;
+import com.example.chat.presence.PresenceTabRepository;
+import com.example.chat.readstate.ReadStateRepository;
+import com.example.chat.rooms.RoomRepository;
 import com.example.chat.users.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,9 +33,23 @@ class FriendshipIntegrationTest extends IntegrationTestBase {
     @Autowired FriendRequestRepository friendRequestRepository;
     @Autowired FriendshipRepository friendshipRepository;
     @Autowired UserBlockRepository userBlockRepository;
+    @Autowired AttachmentRepository attachmentRepository;
+    @Autowired PresenceTabRepository presenceTabRepository;
+    @Autowired ReadStateRepository readStateRepository;
+    @Autowired MessageRepository messageRepository;
+    @Autowired RoomBanRepository roomBanRepository;
+    @Autowired RoomMembershipRepository membershipRepository;
+    @Autowired RoomRepository roomRepository;
 
     @BeforeEach
     void cleanup() {
+        attachmentRepository.deleteAll();
+        presenceTabRepository.deleteAll();
+        readStateRepository.deleteAll();
+        messageRepository.deleteAll();
+        roomBanRepository.deleteAll();
+        membershipRepository.deleteAll();
+        roomRepository.deleteAll();
         userBlockRepository.deleteAll();
         friendshipRepository.deleteAll();
         friendRequestRepository.deleteAll();
