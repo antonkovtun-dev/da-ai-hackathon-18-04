@@ -36,8 +36,7 @@ export default function RoomMembersPanel({ roomId, onOpenBanList, onDeleteRoom }
   useEffect(() => {
     setLoading(true)
     fetchMembers()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [roomId])
+  }, [fetchMembers])
 
   async function handleKick(m: Member) {
     if (!confirm(`Kick @${m.username} from this room?`)) return
@@ -78,9 +77,9 @@ export default function RoomMembersPanel({ roomId, onOpenBanList, onDeleteRoom }
   const canPromote = (target: Member) =>
     myRole === 'OWNER' && target.role === 'MEMBER' && target.userId !== user?.id
 
-  // OWNER or ADMIN can demote ADMIN to MEMBER
+  // OWNER only can demote ADMIN to MEMBER
   const canDemote = (target: Member) =>
-    (myRole === 'OWNER' || myRole === 'ADMIN') &&
+    myRole === 'OWNER' &&
     target.role === 'ADMIN' &&
     target.userId !== user?.id
 
@@ -96,7 +95,7 @@ export default function RoomMembersPanel({ roomId, onOpenBanList, onDeleteRoom }
           <p className="px-3 py-2 text-gray-500 text-xs">Loading…</p>
         ) : (
           members.map((m) => (
-            <div key={m.userId} className="px-3 py-1.5 hover:bg-gray-750">
+            <div key={m.userId} className="px-3 py-1.5 hover:bg-gray-700">
               <div className="flex items-center gap-1.5 min-w-0">
                 <span className="truncate text-gray-200 text-xs">@{m.username}</span>
                 <span className={`flex-shrink-0 text-[10px] px-1 rounded ${ROLE_BADGE[m.role]}`}>

@@ -41,7 +41,7 @@ export default function MessageList({ roomId, isAdmin = false }: Props) {
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [roomMessages.length === 0])
+  }, [roomMessages.length])
 
   async function loadMore() {
     if (loadingMore || !hasMore || roomMessages.length === 0) return

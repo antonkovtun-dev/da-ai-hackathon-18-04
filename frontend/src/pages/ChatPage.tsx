@@ -45,7 +45,7 @@ export default function ChatPage() {
     }).catch(() => {})
 
     return () => setActiveRoom(null)
-  }, [roomId])
+  }, [roomId, user?.id])
 
   async function handleLogout() {
     await logout()
