@@ -17,6 +17,10 @@ spring:
     jdbc:
       initialize-schema: always
     timeout: 7d
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 21MB
 
 server:
   port: ${PORT:8080}
@@ -27,3 +31,6 @@ logging:
   level:
     root: INFO
     com.example.chat: DEBUG
+
+app:
+  upload-dir: ${UPLOAD_DIR:/tmp/chat-uploads}
