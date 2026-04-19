@@ -10,6 +10,38 @@ Full-featured group and direct-message chat: user accounts, persistent sessions,
 
 ---
 
+## Getting started
+
+### Docker Compose (recommended)
+
+```bash
+docker compose up --build     # build images and start everything
+```
+
+Once healthy:
+- **UI** → http://localhost
+
+Flyway migrations run automatically on first backend startup. No seed data is loaded; register the first user through the UI.
+
+```bash
+docker compose down           # stop and remove containers (data volumes preserved)
+docker compose down -v        # also remove volumes (wipes database and uploads)
+```
+
+## Seed / demo data
+
+No seed data is shipped. To reach a meaningful demo state after `docker compose up`:
+
+1. Open [http://localhost](http://localhost) and register a first user (e.g. `alice`).
+2. In a second browser (or incognito tab), register a second user (e.g. `bob`).
+3. As `alice`, create a public room named `general`.
+4. As `bob`, browse the room catalog and join `general`.
+5. Send messages between the two accounts to verify real-time delivery. Use separate browsers (or one normal + one incognito window) — sessions are cookie-scoped, so two tabs in the same browser share the same login.
+6. To test direct messages: as `alice`, send `bob` a friend request; accept it as `bob`; then open the DM from the contacts panel.
+7. To test file attachments: use the 📎 button or paste an image into the composer.
+
+---
+
 ## Feature checklist — spec vs. implementation
 
 ### §1 User accounts
@@ -122,41 +154,6 @@ Full-featured group and direct-message chat: user accounts, persistent sessions,
 All authorization checks are enforced server-side. The frontend never makes trust decisions — it only renders what the API returns.
 
 Historical messages load over HTTP (cursor-paginated). Live deltas (new messages, edits/deletes, unread increments, presence changes, membership events) arrive over WebSocket. On reconnect the client resyncs unread state and re-registers the presence heartbeat.
-
----
-
-## Getting started
-
-### Docker Compose (recommended)
-
-```bash
-cp .env.example .env          # edit DB_USER / DB_PASSWORD if desired
-docker compose up --build     # build images and start everything
-```
-
-Once healthy:
-- **Frontend** → http://localhost
-- **Backend API** → http://localhost:8080
-- **PostgreSQL** → `localhost:5432` (database: `chat`)
-
-Flyway migrations run automatically on first backend startup. No seed data is loaded; register the first user through the UI.
-
-```bash
-docker compose down           # stop and remove containers (data volumes preserved)
-docker compose down -v        # also remove volumes (wipes database and uploads)
-```
-
-## Seed / demo data
-
-No seed data is shipped. To reach a meaningful demo state after `docker compose up`:
-
-1. Open [http://localhost](http://localhost) and register a first user (e.g. `alice`).
-2. In a second browser (or incognito tab), register a second user (e.g. `bob`).
-3. As `alice`, create a public room named `general`.
-4. As `bob`, browse the room catalog and join `general`.
-5. Send messages between the two accounts to verify real-time delivery. Use separate browsers (or one normal + one incognito window) — sessions are cookie-scoped, so two tabs in the same browser share the same login.
-6. To test direct messages: as `alice`, send `bob` a friend request; accept it as `bob`; then open the DM from the contacts panel.
-7. To test file attachments: use the 📎 button or paste an image into the composer.
 
 ---
 
