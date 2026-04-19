@@ -40,7 +40,7 @@ docker compose up --build     # build images and start everything
 ```
 
 Once healthy:
-- **Frontend** → http://localhost:80
+- **Frontend** → http://localhost
 - **Backend API** → http://localhost:8080
 - **PostgreSQL** → `localhost:5432` (database: `chat`)
 
@@ -54,6 +54,8 @@ docker compose down -v        # also remove volumes (wipes database and uploads)
 ### Local development (hot-reload)
 
 Run backend and frontend separately for fast iteration:
+
+**Prerequisites:** JDK 21 and Node 18+ must be installed on the host.
 
 ```bash
 # Terminal 1 — backend (requires Docker for Postgres)
@@ -81,7 +83,7 @@ cd backend
 
 Copy `.env.example` to `.env` before starting. All variables have working defaults for local development; override only what you need.
 
-| Variable | Default (compose) | Description |
+| Variable | Local dev default | Description |
 |---|---|---|
 | `DB_USER` | `chat` | PostgreSQL username |
 | `DB_PASSWORD` | `chat` | PostgreSQL password |
@@ -96,11 +98,11 @@ See `.env.example` for the full file with comments.
 
 No seed data is shipped. To reach a meaningful demo state after `docker compose up`:
 
-1. Open [http://localhost:80](http://localhost:80) and register a first user (e.g. `alice`).
+1. Open [http://localhost](http://localhost) and register a first user (e.g. `alice`).
 2. In a second browser (or incognito tab), register a second user (e.g. `bob`).
 3. As `alice`, create a public room named `general`.
 4. As `bob`, browse the room catalog and join `general`.
-5. Send messages between the two accounts to verify real-time delivery.
+5. Send messages between the two accounts to verify real-time delivery. Use separate browsers (or one normal + one incognito window) — sessions are cookie-scoped, so two tabs in the same browser share the same login.
 6. To test direct messages: as `alice`, send `bob` a friend request; accept it as `bob`; then open the DM from the contacts panel.
 7. To test file attachments: use the 📎 button or paste an image into the composer.
 
@@ -127,7 +129,7 @@ The spec left several behaviors open; the implementation commits to these resolu
 - **No email delivery in any environment.** Password reset tokens are logged to stdout. Wiring an SMTP provider is out of scope for v1.
 - **Room visibility is immutable.** Public/private is set at creation and cannot be changed.
 - **Local file storage only.** Uploads live in a Docker named volume. There is no object storage, CDN, antivirus scan, or automatic backup. Removing the volume (`docker compose down -v`) permanently deletes all uploaded files.
-- **No invite UI.** The invitation system is fully implemented in the backend but the frontend does not yet expose invite sending/accepting flows. Users can only join private rooms if an admin adds them directly (future work).
+- **No invite UI.** The invitation system is fully implemented in the backend but the frontend does not yet expose invite sending/accepting flows. Private rooms cannot be tested end-to-end via the UI in this build; they can be exercised directly via the API (e.g. `curl -X POST http://localhost:8080/api/rooms` with `"isPrivate": true`).
 - **Presence granularity is ~30 s.** The heartbeat fires every 30 seconds. Status transitions (online → AFK → offline) propagate within ~2 s after the heartbeat is processed, so the worst-case lag for a tab-close detection is ~32 s.
 - **Single-region, single-instance.** No horizontal scaling, no Redis session store, no shared upload volume. Suitable for demo / hackathon use.
 - **Password reset is one-shot in dev.** The token is printed once to the log; there is no resend flow in v1.
