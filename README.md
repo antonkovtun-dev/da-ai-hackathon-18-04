@@ -10,6 +10,28 @@ Full-featured group and direct-message chat: user accounts, persistent sessions,
 
 ---
 
+## What works and what doesn't
+
+### Working end-to-end
+
+- **Accounts** — register, login, logout, change password, password reset (token printed to backend log), delete account (cascades all data), persistent sessions with list-and-revoke per device.
+- **Rooms** — create public or private rooms, browse and search the public catalog, join/leave, real-time messaging with edit and delete, cursor-paginated history, file and image attachments (upload via button or paste), unread badges.
+- **Moderation** — room owner can promote members to admin, demote admins, kick (= ban) members, view and manage the room ban list, delete the room entirely.
+- **Friends and direct messages** — send friend requests by username with an optional message, accept/decline/cancel, remove friends, open a DM thread from the contacts panel, real-time DM delivery with edit and delete.
+- **User blocks** — block a user (terminates friendship, cancels pending requests, freezes DM history), unblock to restore eligibility.
+- **Presence** — online / AFK / offline status derived from per-tab heartbeats; green/yellow/gray dots next to members in the room panel and DM contacts in the sidebar.
+- **Settings page** — change password, view active sessions (browser hint + IP + last-active time), revoke any session individually, delete account.
+- **Real-time** — all events (new messages, edits/deletes, presence changes, unread counts, membership changes) are pushed over WebSocket; the client resyncs automatically on reconnect.
+
+### Not implemented
+
+- **Message replies** — there is no reply-to / quoted-message feature. Messages stand alone.
+- **Private room invitations** — the backend database table (`room_invitations`) and the invitation status model are designed, but the invitation service, controller, and all frontend flows (send invite, accept/decline, pending-invites inbox) were not built. In practice this means private rooms exist in the system but cannot be joined through the UI — they can only be tested via the raw API.
+- **Email delivery** — password reset tokens are written to the backend log (`INFO` level). No SMTP integration exists.
+- **Room visibility change** — public/private is fixed at creation time and cannot be converted later.
+
+---
+
 ## Architecture
 
 | Layer | Choice | Rationale |
@@ -126,10 +148,8 @@ The spec left several behaviors open; the implementation commits to these resolu
 
 ## Known limitations
 
-- **No email delivery in any environment.** Password reset tokens are logged to stdout. Wiring an SMTP provider is out of scope for v1.
-- **Room visibility is immutable.** Public/private is set at creation and cannot be changed.
-- **Local file storage only.** Uploads live in a Docker named volume. There is no object storage, CDN, antivirus scan, or automatic backup. Removing the volume (`docker compose down -v`) permanently deletes all uploaded files.
-- **No invite UI.** The invitation system is fully implemented in the backend but the frontend does not yet expose invite sending/accepting flows. Private rooms cannot be tested end-to-end via the UI in this build; they can be exercised directly via the API (e.g. `curl -X POST http://localhost:8080/api/rooms` with `"isPrivate": true`).
-- **Presence granularity is ~30 s.** The heartbeat fires every 30 seconds. Status transitions (online → AFK → offline) propagate within ~2 s after the heartbeat is processed, so the worst-case lag for a tab-close detection is ~32 s.
-- **Single-region, single-instance.** No horizontal scaling, no Redis session store, no shared upload volume. Suitable for demo / hackathon use.
-- **Password reset is one-shot in dev.** The token is printed once to the log; there is no resend flow in v1.
+- **No email delivery.** Password reset tokens are logged to backend stdout. No SMTP integration.
+- **Local file storage only.** Uploads live in a Docker named volume — no object storage, no CDN, no antivirus scan. `docker compose down -v` permanently deletes all uploads.
+- **Presence granularity is ~30 s.** The heartbeat fires every 30 s; worst-case lag for a tab-close → offline transition is ~32 s.
+- **Single-region, single-instance.** No horizontal scaling, no Redis session store. Suitable for demo / hackathon use.
+- **Private rooms are API-only.** You can create a private room via `POST /api/rooms` with `"isPrivate": true`, but there is no UI to invite members or join one.
