@@ -116,7 +116,8 @@ public class MessageService {
 
         Set<UUID> authorIds = messages.stream().map(Message::getAuthorId).collect(Collectors.toSet());
         Map<UUID, String> usernames = userRepository.findAllById(authorIds).stream()
-                .collect(Collectors.toMap(User::getId, User::getUsername));
+                .collect(Collectors.toMap(User::getId,
+                        u -> u.getDeletedAt() != null ? "[deleted user]" : u.getUsername()));
 
         List<UUID> messageIds = messages.stream().map(Message::getId).toList();
         Map<UUID, AttachmentResponse> attachmentMap = messageIds.isEmpty()

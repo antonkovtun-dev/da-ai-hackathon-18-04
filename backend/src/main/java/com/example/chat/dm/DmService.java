@@ -75,7 +75,7 @@ public class DmService {
             UUID otherId = t.getUser1Id().equals(userId) ? t.getUser2Id() : t.getUser1Id();
             User other = users.get(otherId);
             return new DmThreadResponse(t.getId(), otherId,
-                other != null ? other.getUsername() : "unknown", t.getCreatedAt());
+                other != null ? (other.getDeletedAt() != null ? "[deleted user]" : other.getUsername()) : "unknown", t.getCreatedAt());
         }).toList();
     }
 
@@ -174,7 +174,7 @@ public class DmService {
     private DmMessageResponse toResponse(DmMessage m, Map<UUID, User> users) {
         User author = users.get(m.getAuthorId());
         return new DmMessageResponse(m.getId(), m.getThreadId(), m.getAuthorId(),
-            author != null ? author.getUsername() : "unknown",
+            author != null ? (author.getDeletedAt() != null ? "[deleted user]" : author.getUsername()) : "unknown",
             m.getDeletedAt() != null ? null : m.getContent(),
             m.getCreatedAt(), m.getEditedAt(), m.getDeletedAt() != null);
     }
