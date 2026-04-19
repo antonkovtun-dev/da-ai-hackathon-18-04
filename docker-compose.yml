@@ -25,6 +25,9 @@ services:
       DB_URL: jdbc:postgresql://postgres:5432/chat
       DB_USER: ${DB_USER:-chat}
       DB_PASSWORD: ${DB_PASSWORD:-chat}
+      UPLOAD_DIR: /data/uploads
+    volumes:
+      - uploads_data:/data/uploads
     depends_on:
       postgres:
         condition: service_healthy
@@ -40,3 +43,4 @@ services:
 
 volumes:
   postgres_data:
+  uploads_data:
