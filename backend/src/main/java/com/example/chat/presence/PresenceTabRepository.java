@@ -17,4 +17,8 @@ public interface PresenceTabRepository extends JpaRepository<PresenceTab, UUID> 
     @Modifying(clearAutomatically = true)
     @Query("DELETE FROM PresenceTab t WHERE t.userId = :userId AND t.lastHeartbeatAt < :before")
     void deleteStale(UUID userId, OffsetDateTime before);
+
+    @Modifying(clearAutomatically = true)
+    @Query("DELETE FROM PresenceTab t WHERE t.userId = :userId")
+    void deleteByUserId(UUID userId);
 }

@@ -30,4 +30,9 @@ public interface FriendRequestRepository extends JpaRepository<FriendRequest, UU
     void cancelPendingBetween(@Param("a") UUID a, @Param("b") UUID b,
                               @Param("pending") FriendRequestStatus pending,
                               @Param("canceled") FriendRequestStatus canceled);
+
+    @Modifying
+    @Transactional
+    @Query("DELETE FROM FriendRequest r WHERE r.senderId = :userId OR r.receiverId = :userId")
+    void deleteByUserId(@Param("userId") UUID userId);
 }

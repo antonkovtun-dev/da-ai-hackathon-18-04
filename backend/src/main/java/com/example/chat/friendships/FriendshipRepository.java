@@ -19,4 +19,9 @@ public interface FriendshipRepository extends JpaRepository<Friendship, UUID> {
     @Query("DELETE FROM Friendship f WHERE " +
            "(f.user1Id = :a AND f.user2Id = :b) OR (f.user1Id = :b AND f.user2Id = :a)")
     void deleteBetween(@Param("a") UUID a, @Param("b") UUID b);
+
+    @Modifying
+    @Transactional
+    @Query("DELETE FROM Friendship f WHERE f.user1Id = :userId OR f.user2Id = :userId")
+    void deleteByUserId(@Param("userId") UUID userId);
 }

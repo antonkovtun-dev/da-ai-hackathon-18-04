@@ -15,4 +15,6 @@ public interface RoomMembershipRepository extends JpaRepository<RoomMembership, 
 
     @Query("SELECT m.roomId FROM RoomMembership m WHERE m.userId = :userId")
     List<UUID> findRoomIdsByUserId(UUID userId);
+
+    void deleteByUserId(UUID userId);
 }
