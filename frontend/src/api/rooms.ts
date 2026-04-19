@@ -14,6 +14,15 @@ export interface Member {
   joinedAt: string
 }
 
+export interface BanResponse {
+  id: string
+  userId: string
+  username: string
+  bannedBy: string
+  reason: string | null
+  bannedAt: string
+}
+
 export interface RoomPage {
   content: Room[]
   totalPages: number
@@ -74,3 +83,9 @@ export const markRoomRead = (id: string) =>
 
 export const getUnreadCounts = () =>
   request<Record<string, number>>('/api/rooms/unread')
+
+export const listBans = (roomId: string) =>
+  request<BanResponse[]>(`/api/rooms/${roomId}/bans`)
+
+export const unbanUser = (roomId: string, userId: string) =>
+  request<void>(`/api/rooms/${roomId}/bans/${userId}`, { method: 'DELETE' })
