@@ -8,6 +8,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -27,15 +29,18 @@ public class AuthController {
     private final AuthenticationManager authenticationManager;
     private final HttpSessionSecurityContextRepository securityContextRepository;
     private final UserRepository userRepository;
+    private final PasswordResetService passwordResetService;
 
     public AuthController(AuthService authService,
                           AuthenticationManager authenticationManager,
                           HttpSessionSecurityContextRepository securityContextRepository,
-                          UserRepository userRepository) {
+                          UserRepository userRepository,
+                          PasswordResetService passwordResetService) {
         this.authService = authService;
         this.authenticationManager = authenticationManager;
         this.securityContextRepository = securityContextRepository;
         this.userRepository = userRepository;
+        this.passwordResetService = passwordResetService;
     }
 
     @PostMapping("/register")
@@ -69,6 +74,21 @@ public class AuthController {
         return userRepository.findById(details.getUserId())
                 .map(UserResponse::from)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
+    }
+
+    record ForgotPasswordRequest(@NotBlank String email) {}
+    record ResetPasswordRequest(@NotBlank String token, @NotBlank @Size(min = 8) String newPassword) {}
+
+    @PostMapping("/forgot-password")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void forgotPassword(@Valid @RequestBody ForgotPasswordRequest req) {
+        passwordResetService.requestReset(req.email());
+    }
+
+    @PostMapping("/reset-password")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void resetPassword(@Valid @RequestBody ResetPasswordRequest req) {
+        passwordResetService.resetPassword(req.token(), req.newPassword());
     }
 
     private void authenticate(String email, String password,

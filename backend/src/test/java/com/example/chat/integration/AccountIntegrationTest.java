@@ -19,6 +19,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.util.Map;
 
@@ -26,6 +27,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class AccountIntegrationTest extends IntegrationTestBase {
 
+    @Autowired JdbcTemplate jdbcTemplate;
     @Autowired UserRepository userRepository;
     @Autowired AttachmentRepository attachmentRepository;
     @Autowired PresenceTabRepository presenceTabRepository;
@@ -42,6 +44,7 @@ class AccountIntegrationTest extends IntegrationTestBase {
 
     @BeforeEach
     void cleanup() {
+        jdbcTemplate.execute("DELETE FROM password_reset_tokens");
         attachmentRepository.deleteAll();
         presenceTabRepository.deleteAll();
         readStateRepository.deleteAll();
@@ -98,6 +101,34 @@ class AccountIntegrationTest extends IntegrationTestBase {
         var newLogin = restTemplate.postForEntity("/api/auth/login",
                 new LoginRequest("bob@example.com", "newpass123"), Void.class);
         assertThat(newLogin.getStatusCode()).isEqualTo(HttpStatus.OK);
+    }
+
+    @Test
+    void forgotPassword_logs_token_and_reset_changes_password() {
+        restTemplate.postForEntity("/api/auth/register",
+                new RegisterRequest("carol@example.com", "carol", "password123"), Void.class);
+
+        var forgotResp = restTemplate.postForEntity("/api/auth/forgot-password",
+                Map.of("email", "carol@example.com"), Void.class);
+        assertThat(forgotResp.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+
+        String token = jdbcTemplate.queryForObject(
+                "SELECT token FROM password_reset_tokens WHERE user_id = " +
+                "(SELECT id FROM users WHERE email = 'carol@example.com')",
+                String.class);
+        assertThat(token).isNotNull();
+
+        var resetResp = restTemplate.postForEntity("/api/auth/reset-password",
+                Map.of("token", token, "newPassword", "newpass123"), Void.class);
+        assertThat(resetResp.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+
+        assertThat(restTemplate.postForEntity("/api/auth/login",
+                new LoginRequest("carol@example.com", "password123"), Void.class)
+                .getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+
+        assertThat(restTemplate.postForEntity("/api/auth/login",
+                new LoginRequest("carol@example.com", "newpass123"), Void.class)
+                .getStatusCode()).isEqualTo(HttpStatus.OK);
     }
 
     // --- helpers ---
