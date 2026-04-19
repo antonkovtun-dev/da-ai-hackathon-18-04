@@ -85,7 +85,7 @@ Copy `.env.example` to `.env` before starting. All variables have working defaul
 |---|---|---|
 | `DB_USER` | `chat` | PostgreSQL username |
 | `DB_PASSWORD` | `chat` | PostgreSQL password |
-| `DB_URL` | `jdbc:postgresql://postgres:5432/chat` | JDBC URL — auto-set inside Docker; override for host-local runs |
+| `DB_URL` | `jdbc:postgresql://localhost:5432/chat` | JDBC URL — override when running the backend on the host; inside Docker Compose this is automatically set to `jdbc:postgresql://postgres:5432/chat` |
 | `UPLOAD_DIR` | `/data/uploads` | Directory where the backend stores uploaded files — mapped to the `uploads_data` Docker volume |
 
 See `.env.example` for the full file with comments.
@@ -94,7 +94,15 @@ See `.env.example` for the full file with comments.
 
 ## Seed / demo data
 
-No seed data is shipped. Register users and create rooms through the UI after `docker compose up`.
+No seed data is shipped. To reach a meaningful demo state after `docker compose up`:
+
+1. Open [http://localhost:80](http://localhost:80) and register a first user (e.g. `alice`).
+2. In a second browser (or incognito tab), register a second user (e.g. `bob`).
+3. As `alice`, create a public room named `general`.
+4. As `bob`, browse the room catalog and join `general`.
+5. Send messages between the two accounts to verify real-time delivery.
+6. To test direct messages: as `alice`, send `bob` a friend request; accept it as `bob`; then open the DM from the contacts panel.
+7. To test file attachments: use the 📎 button or paste an image into the composer.
 
 ---
 
